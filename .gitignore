@@ -1,0 +1,34 @@
+
+# Generated files
+bin/
+gen/
+out/
+
+# IntelliJ
+*.iml
+.idea
+
+# mpeltonen/sbt-idea plugin
+.idea_modules/
+
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+.history
+.cache
+.lib/
+*.class
+*.log
+
+.metals/
+metals.sbt
+.bloop/
+project/secret
+.bsp/
+.vscode/
+
+.env
+.env.*

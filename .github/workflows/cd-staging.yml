@@ -1,0 +1,60 @@
+name: CD Staging
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+
+      - name: Run tests
+        run: sbt clean test
+
+      - name: Setup GCP Service Account
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          version: 'latest'
+          service_account_key: ${{ secrets.GCP_KEY_SECRET }}
+          export_default_credentials: true
+
+      - name: Configure Docker Registry
+        run: |
+          gcloud auth configure-docker
+
+      - name: Build Docker Image
+        run: |
+          sbt "api / Docker / publish"
+        env:
+          DOCKER_PACKAGE: ${{ secrets.GCP_PROJECT_ID }}/api-template
+
+      - name: Deploy Cloud Run
+        run: |
+          gcloud run deploy api-template \
+          --region europe-west1 \
+          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest \
+          --platform managed \
+          --allow-unauthenticated \
+          --cpu 1000m --memory 512Mi --max-instances 1 \
+          --project ${{ secrets.GCP_PROJECT_ID }} \
+          --update-env-vars DB_USER=${{ secrets.DB_USER }} \
+          --update-env-vars DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          --update-env-vars DB_HOST=${{ secrets.DB_HOST }} \
+          --update-env-vars DB_PORT=${{ secrets.DB_PORT }} \
+          --update-env-vars DB_USE_SSL=false \
+          --update-env-vars DB_DATABASE=api_template \
+          --update-env-vars DB_MAX_POOL_SIZE=16 \
+          --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
+          --add-cloudsql-instances conduktor:europe-west1:conduktor-dev \
+          --vpc-connector vpc-connector-to-cloudsql \
+          --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor-dev"
+
+
