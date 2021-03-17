@@ -27,3 +27,4 @@ project/plugins/project/
 metals.sbt
 .bloop/
 project/secret
+.bsp/
