@@ -1,19 +1,15 @@
-name-template: 'v$NEXT_PATCH_VERSION'
-tag-template: 'v$NEXT_PATCH_VERSION'
+
+name-template: 'v$RESOLVED_VERSION'
 categories:
-  - title: '🚀 Features'
+  - title: 'Enhancements'
+    label: 'enhancement'
+  - title: 'Bug fixes'
     labels:
-      - 'feature'
-  - title: '🐛 Bug Fixes'
-    labels:
+      - 'fix'
+      - 'bugfix'
       - 'bug'
-  - title: '🧰 Maintenance'
-    labels:
-      - 'build'
-  - title: '🌱 Dependency Updates'
-    labels:
-      - 'dependency-update'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+  - title: 'Dependency updates'
+    label: 'dependency-update'
+change-template: '- $TITLE: #$NUMBER by @$AUTHOR'
 template: |
-  ## Changes
   $CHANGES

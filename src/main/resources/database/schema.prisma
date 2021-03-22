@@ -1,0 +1,18 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+model User {
+  id    String      @id @default(uuid())
+  name  String
+  posts Post[]
+}
+model Post {
+  id        String     @id @default(uuid())
+  title     String
+  //published Boolean @default(false) => add in a migration
+  authorId  String
+  author    User    @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt  DateTime    @default(now())
+}

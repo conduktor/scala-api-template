@@ -1,11 +1,9 @@
 import sbt.Keys._
 import sbt._
-import sbtbuildinfo.BuildInfoKeys._
-import sbtbuildinfo._
-import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixSemanticdb, _}
+import scalafix.sbt.ScalafixPlugin.autoImport.{ scalafixSemanticdb, _ }
 
 object BuildHelper {
-  val Scala213        = "2.13.5"
+  val Scala213 = "2.13.5"
 
   private val stdOptions = Seq(
     "-deprecation",
@@ -26,7 +24,7 @@ object BuildHelper {
     "-language:existentials",
     "-explaintypes",
     "-Yrangepos",
-    "-Xlint:_,-missing-interpolator,-type-parameter-shadow",
+    "-Xlint:_,-missing-interpolator,-type-parameter-shadow,-byname-implicit",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard"
   )
@@ -38,14 +36,6 @@ object BuildHelper {
       )
     else Nil
 
-  def buildInfoSettings(packageName: String) =
-    Seq(
-      buildInfoKeys := Seq[BuildInfoKey](organization, moduleName, name, version, scalaVersion, sbtVersion, isSnapshot),
-      buildInfoPackage := packageName,
-      buildInfoObject := "BuildInfo"
-    )
-
-
   val scalaReflectSettings = Seq(
     libraryDependencies ++= Seq("dev.zio" %% "izumi-reflect" % "1.0.0-M16")
   )
@@ -55,12 +45,11 @@ object BuildHelper {
       "-Ywarn-unused:params,-implicits"
     ) ++ std2xOptions ++ optimizerOptions(optimize)
 
-
   def stdSettings(prjName: String) = Seq(
     name := s"$prjName",
     scalaVersion in ThisBuild := Scala213,
     scalacOptions := stdOptions ++ extraOptions(optimize = !isSnapshot.value),
-    libraryDependencies += compilerPlugin("org.typelevel"  %% "kind-projector"  % "0.11.3" cross CrossVersion.full),
+    libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full),
     semanticdbEnabled := true,
     semanticdbOptions += "-P:semanticdb:synthetics:on",
     semanticdbVersion := scalafixSemanticdb.revision, // use Scalafix compatible version

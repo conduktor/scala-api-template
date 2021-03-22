@@ -28,3 +28,6 @@ metals.sbt
 .bloop/
 project/secret
 .bsp/
+
+.env
+.env.staging
