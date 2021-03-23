@@ -6,7 +6,6 @@ on:
       - main
       - develop
 
-
 jobs:
   cd:
     runs-on: ubuntu-latest
@@ -17,7 +16,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.11
-
+      - name: Run tests
+        run: sbt test
       - name: Setup GCP Service Account
         uses: google-github-actions/setup-gcloud@master
         with:
@@ -28,17 +28,25 @@ jobs:
         run: |
           gcloud auth configure-docker
 
-      - name: Staging - Build Docker Image
+      - name: Build Docker Image
+        run: |
+          sbt docker
+
+      - name: Tag Docker Image
+        run: |
+          docker image tag eu.gcr.io/conduktor/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
+
+      - name: Staging - Push Docker Image
         if: github.ref == 'refs/heads/develop'
         run: |
-          sbt ';docker;dockerPush eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/scala-api-template:latest'
+          docker push eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
 
       - name: Staging - Deploy Cloud Run
         if: github.ref == 'refs/heads/develop'
         run: |
-          gcloud run deploy scala-api-template \
+          gcloud run deploy api-template \
           --region europe-west1 \
-          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/scala-api-template:latest \
+          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest \
           --platform managed \
           --allow-unauthenticated \
           --cpu 1000m --memory 512Mi --max-instances 1 \
@@ -60,14 +68,14 @@ jobs:
 #      - name: Prod - Build Docker Image
 #        if: github.ref == 'refs/heads/main'
 #        run: |
-#          sbt ';docker;dockerPush eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/scala-api-template-prod:latest'
+#          sbt ';docker;dockerPush eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest'
 
       #      - name: Production - Deploy Cloud Run
 #        if: github.ref == 'refs/heads/main'
 #        run: |
-#          gcloud run deploy scala-api-template-prod \
+#          gcloud run deploy api-template-prod \
 #          --region europe-west1 \
-#          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/scala-api-template-prod:latest \
+#          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/template-prod:latest \
 #          --platform managed \
 #          --allow-unauthenticated \
 #          --cpu 1000m --memory 512Mi --max-instances 2 \

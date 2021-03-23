@@ -115,7 +115,7 @@ lazy val root = project
 //    ),
 
     docker / dockerfile := NativeDockerfile(file("Dockerfile")),
-    docker / imageNames := Seq(ImageName(s"ghcr.io/conduktor/${name.value}:${dockerImageTag}")),
+    docker / imageNames := Seq(ImageName(s"eu.gcr.io/conduktor/${name.value}:${dockerImageTag}")),
     docker / dockerBuildArguments := sys.env.get(upx).map(s => Map("upx_compression" -> s)).getOrElse(Map.empty),
     assembly / assemblyMergeStrategy := {
       case "META-INF/maven/org.webjars/swagger-ui/pom.properties" => MergeStrategy.singleOrError
