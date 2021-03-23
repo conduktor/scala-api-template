@@ -60,7 +60,7 @@ jobs:
           --update-env-vars DB_MAX_POOL_SIZE=16 \
           --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
           --add-cloudsql-instances conduktor:europe-west1:conduktor-dev \
-          --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor"
+          --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor-dev"
 
 # Let's first test this all in staging :)
 #      - name: Prod - Build Docker Image
@@ -97,7 +97,9 @@ jobs:
           node-version: '14'
       - name: STAGING - Execute database migration
         if: github.ref == 'refs/heads/develop'
-        run: DB_URL=${{ secrets.DB_URL }};npx prisma migrate deploy
+        run: npx prisma migrate deploy
+        env:
+          DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_DATABASE }}?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-dev&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
 #      - name: PROD - Execute database migration
 #        if: github.ref == 'refs/heads/main'
 #        run: DB_URL=${{ secrets.PROD_DB_URL }};npx prisma migrate deploy
