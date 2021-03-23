@@ -7,6 +7,12 @@
 - graalVM
 - ZIO (effect, stream, config, tests)
 
+## Git flow 
+- branch from develop
+- merge into develop to release Staging
+- merge develop into main to release Prod
+
+
 ## CAVEATS
 
  - Intellij can't type properly macros (such as skunk's "sql" StringOps)

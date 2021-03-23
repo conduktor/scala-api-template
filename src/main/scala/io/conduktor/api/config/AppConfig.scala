@@ -17,7 +17,7 @@ object AppConfig {
     int("DB_PORT")  |@|
     string("DB_DATABASE")  |@|
     int("DB_MAX_POOL_SIZE")  |@|
-    string("DB_GCP_INSTANCE").optional |@|
+    string("INSTANCE_CONNECTION_NAME").optional |@|
     boolean("DB_USE_SSL").default(false)
     )(DBConfig.apply, DBConfig.unapply)
 

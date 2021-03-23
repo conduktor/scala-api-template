@@ -56,13 +56,13 @@ jobs:
           --update-env-vars DB_HOST=${{ secrets.DB_HOST }} \
           --update-env-vars DB_PORT=${{ secrets.DB_PORT }} \
           --update-env-vars DB_USE_SSL=false \
-          --update-env-vars DB_DATABASE=api-staging \
+          --update-env-vars DB_DATABASE=api_template \
           --update-env-vars DB_MAX_POOL_SIZE=16 \
-          --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }}
+          --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
     #      --update-env-vars AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
 #          --vpc-connector vpc-connector-to-cloudsql \
-#          --add-cloudsql-instances conduktor:europe-west1:conduktor-dev \
-#          --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor"
+          --add-cloudsql-instances conduktor:europe-west1:conduktor-dev \
+          --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor"
 
 # Let's first test this all in staging :)
 #      - name: Prod - Build Docker Image
