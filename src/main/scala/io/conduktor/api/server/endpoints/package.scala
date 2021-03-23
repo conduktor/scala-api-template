@@ -29,9 +29,9 @@ package object endpoints {
       statusDefaultMapping(jsonBody[Unknown].description("unknown"))
     )
   )
+
   val secureEndpoint: ZPartialServerEndpoint[AuthService, User, Unit, ErrorInfo, Unit] = baseEndpoint
     .in(header[String]("Authorization"))
     .zServerLogicForCurrent(AuthService.auth(_).mapError(_ => Unauthorized))
 
-  
 }

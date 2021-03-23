@@ -46,5 +46,6 @@ COPY --from=builder /build/target/graalvm-native-image/api-template /server
 COPY --from=builder /etc/passwd.minimal /etc/passwd
 USER unprivileged
 ENV PATH "/"
+
 EXPOSE 8080
 ENTRYPOINT [ "/server" ]

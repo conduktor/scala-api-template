@@ -30,13 +30,19 @@ object UserAuthenticationLayer {
 
     val live: ZLayer[Has[Auth0Config] with Clock, Nothing, Has[Service]] = ZLayer.fromServices[Auth0Config, Clock.Service, Service] { // [Auth0Config, Clock.Service, Has[Service]]
      case (auth0Conf: Auth0Config, clock: Clock.Service) =>
-         println("AuthService live inner")
+
 
         val service: Service = new Service {
 
         def auth(token: String): Task[User] = {
           (for {
-            claims <- validateJwt(token)
+            bearer <-    ZIO.fromOption {
+              token match {
+                case s"Bearer $a" => Some(a)
+                case _ => None
+              }
+            }.mapError(_ => new Throwable("Invalid auth header"))
+            claims <- validateJwt(bearer)
             json <- ZIO.fromEither(io.circe.parser.parse(claims.content))
             user <- ZIO.fromEither(json.as[User])
           } yield user
@@ -88,7 +94,7 @@ object UserAuthenticationLayer {
         }
 
         private val validateClaims = (claims: JwtClaim) => withJavaClock.flatMap { implicit clock =>
-          if (claims.isValid(s"https://${auth0Conf.domain}/", auth0Conf.audience)) {
+          if (auth0Conf.audience.map(claims.isValid(s"https://${auth0Conf.domain}/", _)).getOrElse(claims.isValid(s"https://${auth0Conf.domain}/"))) {
             ZIO.succeed(claims)
           } else {
             ZIO.fail(new Exception("The JWT did not pass validation"))

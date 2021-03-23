@@ -29,5 +29,5 @@ metals.sbt
 project/secret
 .bsp/
 
-.env
-.env.staging
+.env.
+.env.*

@@ -1,5 +1,6 @@
 import BuildHelper._
 import sbtbuildinfo.BuildInfoKey
+import complete.DefaultParsers._
 
 inThisBuild(
   List(
@@ -13,6 +14,8 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("fix", "; all compile:scalafix test:scalafix; all scalafmtSbt scalafmtAll")
 addCommandAlias("check", "; scalafmtSbtCheck; scalafmtCheckAll; compile:scalafix --check; test:scalafix --check")
 addCommandAlias("updates", ";dependencyUpdates; reload plugins; dependencyUpdates; reload return")
+
+
 
 val upx = "UPX_COMPRESSION"
 
@@ -93,15 +96,23 @@ lazy val root = project
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .settings(
-    graalVMNativeImageOptions ++= Seq(
-      "--allow-incomplete-classpath",
-      "--report-unsupported-elements-at-runtime",
-      "--initialize-at-build-time",
-      "--no-fallback",
-      "--enable-http",
-      "--enable-https",
-      "--enable-all-security-services"
-    ),
+//    graalVMNativeImageOptions ++= Seq(
+//      "--allow-incomplete-classpath",
+//      "--report-unsupported-elements-at-runtime",
+//      "--initialize-at-build-time",
+//      "--no-fallback",
+//      "--enable-http",
+//      "--enable-https",
+//      // TODO below is not tested
+//      "--enable-all-security-services",
+//      "-H:+AddAllCharsets",
+//      "--verbose",
+//      //
+//      "--no-server",
+//      //
+//      "--trace-object-instantiation=java.nio.DirectByteBuffer",
+//      "--initialize-at-run-time=io.grpc.netty.shaded.io.netty.handler.ssl.JdkNpnApplicationProtocolNegotiator,io.grpc.netty.shaded.io.netty.handler.ssl.JettyNpnSslEngine"
+//    ),
 
     docker / dockerfile := NativeDockerfile(file("Dockerfile")),
     docker / imageNames := Seq(ImageName(s"ghcr.io/conduktor/${name.value}:${dockerImageTag}")),
@@ -124,4 +135,32 @@ def dockerImageTag: String = {
   s"$version$upxSuffix"
 }
 
+// MIGRATION
+
+val prisma = inputKey[Unit]("Database migration task.")
+prisma := {
+  // get the result of parsing
+  val args: Seq[String] = spaceDelimited("<arg>").parsed
+
+  val res = args match {
+    case Seq("create") =>
+      println("Creating migration SQL file...")
+      MigrationCommands.createMigration
+    case Seq("apply", "dev") =>
+      println("Applying migrations to dev database...")
+      MigrationCommands.applyMigrationDev
+    case Seq("apply", "prod", "--force") =>
+      println("Applying migrations to prod database...")
+      MigrationCommands.applyProd_danger
+    case Seq("status") =>
+      println("Fetching migration status...")
+      MigrationCommands.getMigrationStatus
+    case Seq("validate") =>
+      println("Validating schema...")
+      MigrationCommands.validateSchema
+    case _ => "Unknown command"
+  }
+  println(res)
+}
+addCommandAlias("migration", ";prisma")
 

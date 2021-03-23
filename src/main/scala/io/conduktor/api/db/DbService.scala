@@ -17,15 +17,12 @@ object DbSessionPool {
 
   val live: ZLayer[Has[DBConfig], Throwable, Has[DbSessionPool.Service]] = ZLayer.fromService {
     conf => new Service {
-      println("DbSessionPool live")
       override def pool: ZManaged[Any, Throwable, ZSession] = {
 
         import natchez.Trace.Implicits.noop
         import zio.interop.catz._
 
         ZManaged.runtime[Any].flatMap { implicit runtime =>
-          println("DbSessionPool live inner")
-
           for {
             poolResource <- Session
               .pooled[Task](
@@ -36,7 +33,11 @@ object DbSessionPool {
                 password = conf.password,
                 max = conf.maxPoolSize,
                 strategy = Strategy.SearchPath,
-                parameters = Session.DefaultConnectionParameters ++ conf.additionalSourceProperties
+                ssl = if(conf.ssl) SSL.Trusted else SSL.None, // TODO trust only db cert
+                parameters = Session.DefaultConnectionParameters ++ conf.gcpInstance.map(instance => Map(
+                  "cloudSqlInstance" -> instance,
+                  "socketFactory" -> "com.google.cloud.sql.postgres.SocketFactory"
+                )).getOrElse(Map.empty)
               ).toManagedZIO
           } yield poolResource.toManagedZIO
         }
@@ -57,15 +58,10 @@ object DbSession {
 
   val live: ZLayer[Has[DbSessionPool.Service], Throwable, Has[DbSession.Service]] =
     ZLayer.fromServiceManaged { poolService =>
-      println("DbSession live")
 
       poolService.pool.map { managedSession =>
         new Service {
-          println("DbSession live inner")
-          override def session: ZManaged[Any, Throwable, Session[Task]] = managedSession.map { a =>
-            println("session inner")
-            a
-          }
+          override def session: ZManaged[Any, Throwable, Session[Task]] = managedSession
         }
       }
     }
