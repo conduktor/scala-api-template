@@ -1,10 +1,6 @@
-name: CI / CD
+name: CD
 
 on: [push, pull_request]
-
-#on push/pr => build + tests
-#on push main => release prod (cloudRun, lib)
-#on push develop => release staging
 
 jobs:
   ci:

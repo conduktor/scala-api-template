@@ -5,7 +5,6 @@ import java.util.UUID
 import io.conduktor.api.db
 import io.conduktor.api.db.DbSession
 import skunk.codec.all._
-import skunk.codec.text.varchar
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
 
