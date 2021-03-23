@@ -59,8 +59,6 @@ jobs:
           --update-env-vars DB_DATABASE=api_template \
           --update-env-vars DB_MAX_POOL_SIZE=16 \
           --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
-    #      --update-env-vars AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
-#          --vpc-connector vpc-connector-to-cloudsql \
           --add-cloudsql-instances conduktor:europe-west1:conduktor-dev \
           --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor"
 
