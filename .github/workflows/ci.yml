@@ -16,14 +16,17 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.11
+
       - name: Run tests
         run: sbt test
+
       - name: Setup GCP Service Account
         uses: google-github-actions/setup-gcloud@master
         with:
           version: 'latest'
           service_account_key: ${{ secrets.GCP_KEY_SECRET }}
           export_default_credentials: true
+
       - name: Configure Docker Registry
         run: |
           gcloud auth configure-docker
@@ -32,16 +35,29 @@ jobs:
         run: |
           sbt docker
 
-      - name: Tag Docker Image
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      ############   STAGING  ################
+      - name: STAGING - Tag Docker Image
+        if: github.ref == 'refs/heads/develop'
         run: |
           docker image tag eu.gcr.io/conduktor/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
 
-      - name: Staging - Push Docker Image
+      - name: STAGING - Push Docker Image
         if: github.ref == 'refs/heads/develop'
         run: |
           docker push eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
 
-      - name: Staging - Deploy Cloud Run
+      - name: STAGING - Execute database migration
+        if: github.ref == 'refs/heads/develop'
+        run: npx prisma migrate deploy
+        env:
+          DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST_PUBLIC }}:${{ secrets.DB_PORT }}/api_template?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-dev&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
+
+      - name: STAGING - Deploy Cloud Run
         if: github.ref == 'refs/heads/develop'
         run: |
           gcloud run deploy api-template \
@@ -53,62 +69,61 @@ jobs:
           --project ${{ secrets.GCP_PROJECT_ID }} \
           --update-env-vars DB_USER=${{ secrets.DB_USER }} \
           --update-env-vars DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-          --update-env-vars DB_HOST=${{ secrets.DB_SOCKET }} \
-          --update-env-vars DB_PORT=${{ secrets.DB_SOCKET_PORT }} \
+          --update-env-vars DB_HOST=${{ secrets.DB_HOST }} \
+          --update-env-vars DB_PORT=${{ secrets.DB_PORT }} \
           --update-env-vars DB_USE_SSL=false \
           --update-env-vars DB_DATABASE=api_template \
           --update-env-vars DB_MAX_POOL_SIZE=16 \
           --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
           --add-cloudsql-instances conduktor:europe-west1:conduktor-dev \
+          --vpc-connector vpc-connector-to-cloudsql \
           --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor-dev"
 
-# Let's first test this all in staging :)
-#      - name: Prod - Build Docker Image
-#        if: github.ref == 'refs/heads/main'
-#        run: |
-#          sbt ';docker;dockerPush eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest'
 
-      #      - name: Production - Deploy Cloud Run
-#        if: github.ref == 'refs/heads/main'
-#        run: |
-#          gcloud run deploy api-template-prod \
-#          --region europe-west1 \
-#          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/template-prod:latest \
-#          --platform managed \
-#          --allow-unauthenticated \
-#          --cpu 1000m --memory 512Mi --max-instances 2 \
-#          --project ${{ secrets.GCP_PROJECT_ID }} \
-#          --update-env-vars DB_USER=${{ secrets.DB_USER }} \
-#          --update-env-vars DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-#          --update-env-vars DB_HOST=${{ secrets.DB_HOST }} \
-#          --update-env-vars DB_PORT=${{ secrets.DB_PORT }} \
-#          --update-env-vars DB_USE_SSL=${{ secrets.DB_USE_SSL }} \
-#          --update-env-vars DB_DATABASE=${{ secrets.DB_DATABASE }} \
-#          --update-env-vars DB_MAX_POOL_SIZE=${{ secrets.DB_MAX_POOL_SIZE }} \
-#          --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
-#          --update-env-vars AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
-#          --vpc-connector vpc-connector-to-cloudsql \
-#          --add-cloudsql-instances conduktor:europe-west1:conduktor-prod \
-#          --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor-prod"
+      ############   PROD  ################
+      - name: PROD - Tag Docker Image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker image tag eu.gcr.io/conduktor/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-      - name: STAGING - Execute database migration
-        if: github.ref == 'refs/heads/develop'
+      - name: PROD - Push Docker Image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker push eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest
+
+      - name: PROD - Execute database migration
+        if: github.ref == 'refs/heads/main'
         run: npx prisma migrate deploy
         env:
-          #DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_DATABASE }}?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-dev&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
-          DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_DATABASE }}
-#      - name: PROD - Execute database migration
-#        if: github.ref == 'refs/heads/main'
-#        run: DB_URL=${{ secrets.PROD_DB_URL }};npx prisma migrate deploy
-#      - name: Create GitHub release
-#        if: github.ref == 'refs/heads/main'
-#        uses: release-drafter/release-drafter@v5
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          tag: ${{ github.ref }}
-#          version: ${{ github.ref }}
+          DB_URL: postgresql://${{ secrets.DB_USER_PROD }}:${{ secrets.DB_PASSWORD_PROD }}@${{ secrets.DB_HOST_PUBLIC_PROD }}:${{ secrets.DB_PORT_PROD }}/api_template_prod?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-prod&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
+
+      - name: PROD - Deploy Cloud Run
+        if: github.ref == 'refs/heads/main'
+        run: |
+          gcloud run deploy api-template-prod \
+          --region europe-west1 \
+          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest \
+          --platform managed \
+          --allow-unauthenticated \
+          --cpu 1000m --memory 512Mi --max-instances 1 \
+          --project ${{ secrets.GCP_PROJECT_ID }} \
+          --update-env-vars DB_USER=${{ secrets.DB_USER_PROD }} \
+          --update-env-vars DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }} \
+          --update-env-vars DB_HOST=${{ secrets.DB_HOST_PROD }} \
+          --update-env-vars DB_PORT=${{ secrets.DB_PORT_PROD }} \
+          --update-env-vars DB_USE_SSL=false \
+          --update-env-vars DB_DATABASE=api_template_prod \
+          --update-env-vars DB_MAX_POOL_SIZE=16 \
+          --update-env-vars AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN_PROD }} \
+          --add-cloudsql-instances conduktor:europe-west1:conduktor-prod \
+          --vpc-connector vpc-connector-to-cloudsql \
+          --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor-prod"
+
+      - name: Create GitHub release
+        if: github.ref == 'refs/heads/main'
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: ${{ github.ref }}
+          version: ${{ github.ref }}

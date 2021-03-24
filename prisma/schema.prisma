@@ -1,6 +1,5 @@
 datasource db {
   provider = "postgresql"
-  // format: postgresql://XX
   url      = env("DB_URL")
 }
 
