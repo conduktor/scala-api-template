@@ -99,7 +99,8 @@ jobs:
         if: github.ref == 'refs/heads/develop'
         run: npx prisma migrate deploy
         env:
-          DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_DATABASE }}?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-dev&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
+          #DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_DATABASE }}?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-dev&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
+          DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_DATABASE }}
 #      - name: PROD - Execute database migration
 #        if: github.ref == 'refs/heads/main'
 #        run: DB_URL=${{ secrets.PROD_DB_URL }};npx prisma migrate deploy

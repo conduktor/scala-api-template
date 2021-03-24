@@ -23,12 +23,14 @@ object Server {
   // Starting the server
   val serve: ZIO[ZEnv with PostRoutes.Env, Throwable, Unit] =
     ZIO.runtime[ZEnv with PostRoutes.Env].flatMap { implicit runtime => // This is needed to derive cats-effect instances for that are needed by http4s
-      BlazeServerBuilder[RIO[PostRoutes.Env with Clock, *]](runtime.platform.executor.asEC)
-        .bindHttp(8080, "localhost")
-        .withHttpApp(Router("/" -> (RoutesInterpreter.routes <+> new SwaggerHttp4s(yaml).routes)).orNotFound)
-        .serve
-        .compile
-        .drain
+      for {
+        port <- zio.system.env("PORT").map(_.flatMap(_.toIntOption).getOrElse(8080))
+        server <- BlazeServerBuilder[RIO[PostRoutes.Env with Clock, *]](runtime.platform.executor.asEC)
+          .bindHttp(port, "0.0.0.0")
+          .withHttpApp(Router("/" -> (RoutesInterpreter.routes <+> new SwaggerHttp4s(yaml).routes)).orNotFound)
+          .serve
+          .compile
+          .drain
+      } yield server
     }
-
 }

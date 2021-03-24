@@ -2,7 +2,6 @@ package io.conduktor.api.db
 
 import io.conduktor.api.config.DBConfig
 import skunk._
-
 import zio._
 
 object DbSessionPool {
@@ -33,7 +32,7 @@ object DbSessionPool {
                 password = conf.password,
                 max = conf.maxPoolSize,
                 strategy = Strategy.SearchPath,
-                ssl = if(conf.ssl) SSL.Trusted else SSL.None, // TODO trust only db cert
+                ssl = if(conf.ssl) SSL.Trusted else SSL.None,
                 parameters = Session.DefaultConnectionParameters ++ conf.gcpInstance.map(instance => Map(
                   "cloudSqlInstance" -> instance,
                   "socketFactory" -> "com.google.cloud.sql.postgres.SocketFactory"

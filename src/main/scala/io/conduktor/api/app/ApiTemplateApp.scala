@@ -7,7 +7,7 @@ import io.conduktor.api.db.{DbSession, DbSessionPool}
 import io.conduktor.api.server.Server
 import zio.logging._
 import zio.magic.ZioProvideMagicOps
-import zio.{App, ExitCode, ULayer, URIO}
+import zio.{App, ExitCode, ULayer, URIO, ZIO}
 import zio.logging.slf4j.Slf4jLogger
 
 object ApiTemplateApp extends App {
@@ -31,13 +31,9 @@ object ApiTemplateApp extends App {
         AppConfig.layer.project(_.db),
         AppConfig.layer.project(_.auth0),
         logLayerLive
-      )
-      .mapError(
-        err => {
-          err.printStackTrace()
-          err
-        }
-      )
+      ).tapError(
+      err => ZIO.effect(Option(err.getMessage).fold(err.printStackTrace())(println(_)))
+     )
       .exitCode
 
   private val program = for {
