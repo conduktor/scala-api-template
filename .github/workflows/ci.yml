@@ -53,8 +53,8 @@ jobs:
           --project ${{ secrets.GCP_PROJECT_ID }} \
           --update-env-vars DB_USER=${{ secrets.DB_USER }} \
           --update-env-vars DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-          --update-env-vars DB_HOST=${{ secrets.DB_HOST }} \
-          --update-env-vars DB_PORT=${{ secrets.DB_PORT }} \
+          --update-env-vars DB_HOST=${{ secrets.DB_SOCKET }} \
+          --update-env-vars DB_PORT=${{ secrets.DB_SOCKET_PORT }} \
           --update-env-vars DB_USE_SSL=false \
           --update-env-vars DB_DATABASE=api_template \
           --update-env-vars DB_MAX_POOL_SIZE=16 \

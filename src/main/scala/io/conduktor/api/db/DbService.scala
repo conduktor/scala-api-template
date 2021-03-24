@@ -32,11 +32,7 @@ object DbSessionPool {
                 password = conf.password,
                 max = conf.maxPoolSize,
                 strategy = Strategy.SearchPath,
-                ssl = if(conf.ssl) SSL.Trusted else SSL.None,
-                parameters = Session.DefaultConnectionParameters ++ conf.gcpInstance.map(instance => Map(
-                  "cloudSqlInstance" -> instance,
-                  "socketFactory" -> "com.google.cloud.sql.postgres.SocketFactory"
-                )).getOrElse(Map.empty)
+                ssl = if(conf.ssl) SSL.Trusted else SSL.None
               ).toManagedZIO
           } yield poolResource.toManagedZIO
         }
