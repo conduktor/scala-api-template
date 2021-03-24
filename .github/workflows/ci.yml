@@ -51,11 +51,17 @@ jobs:
         run: |
           docker push eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
 
+      - name: STAGING - Init CloudSQL Proxy
+        uses: mattes/gce-cloudsql-proxy-action@v1
+        with:
+          creds: ${{ secrets.GCP_KEY_SECRET_JSON }}
+          instance: conduktor:europe-west1:conduktor-dev
+
       - name: STAGING - Execute database migration
         if: github.ref == 'refs/heads/develop'
         run: npx prisma migrate deploy
         env:
-          DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST_PUBLIC }}:${{ secrets.DB_PORT }}/api_template?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-dev&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
+          DB_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost/api_template?host=/cloudsql/conduktor%3Aeurope-west1%3Aconduktor-dev
 
       - name: STAGING - Deploy Cloud Run
         if: github.ref == 'refs/heads/develop'
@@ -91,11 +97,17 @@ jobs:
         run: |
           docker push eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest
 
+      - name: PROD - Init CloudSQL Proxy
+        uses: mattes/gce-cloudsql-proxy-action@v1
+        with:
+          creds: ${{ secrets.GCP_KEY_SECRET_JSON }}
+          instance: conduktor:europe-west1:conduktor-prod
+
       - name: PROD - Execute database migration
         if: github.ref == 'refs/heads/main'
         run: npx prisma migrate deploy
         env:
-          DB_URL: postgresql://${{ secrets.DB_USER_PROD }}:${{ secrets.DB_PASSWORD_PROD }}@${{ secrets.DB_HOST_PUBLIC_PROD }}:${{ secrets.DB_PORT_PROD }}/api_template_prod?cloudSqlInstance=conduktor%3Aeurope-west1%3Aconduktor-prod&socketFactory=com.google.cloud.sql.postgres.SocketFactory&useSSL=false
+          DB_URL: postgresql://${{ secrets.DB_USER_PROD }}:${{ secrets.DB_PASSWORD_PROD }}@localhost/api_template_prod?host=/cloudsql/conduktor%3Aeurope-west1%3Aconduktor-prod
 
       - name: PROD - Deploy Cloud Run
         if: github.ref == 'refs/heads/main'

@@ -96,24 +96,6 @@ lazy val root = project
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .settings(
-//    graalVMNativeImageOptions ++= Seq(
-//      "--allow-incomplete-classpath",
-//      "--report-unsupported-elements-at-runtime",
-//      "--initialize-at-build-time",
-//      "--no-fallback",
-//      "--enable-http",
-//      "--enable-https",
-//      // TODO below is not tested
-//      "--enable-all-security-services",
-//      "-H:+AddAllCharsets",
-//      "--verbose",
-//      //
-//      "--no-server",
-//      //
-//      "--trace-object-instantiation=java.nio.DirectByteBuffer",
-//      "--initialize-at-run-time=io.grpc.netty.shaded.io.netty.handler.ssl.JdkNpnApplicationProtocolNegotiator,io.grpc.netty.shaded.io.netty.handler.ssl.JettyNpnSslEngine"
-//    ),
-
     docker / dockerfile := NativeDockerfile(file("Dockerfile")),
     docker / imageNames := Seq(ImageName(s"eu.gcr.io/conduktor/${name.value}:${dockerImageTag}")),
     docker / dockerBuildArguments := sys.env.get(upx).map(s => Map("upx_compression" -> s)).getOrElse(Map.empty),
@@ -136,7 +118,6 @@ def dockerImageTag: String = {
 }
 
 // MIGRATION
-
 val prisma = inputKey[Unit]("Database migration task.")
 prisma := {
   // get the result of parsing
@@ -163,4 +144,5 @@ prisma := {
   println(res)
 }
 addCommandAlias("migration", ";prisma")
+
 
