@@ -5,7 +5,7 @@ package io.conduktor.api.db.repository
 import java.util.UUID
 
 import io.conduktor.api.db
-import io.conduktor.api.db.{DbSession, DbSessionPool}
+import io.conduktor.api.db.DbSessionPool
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
@@ -53,38 +53,40 @@ object PostRepository {
     // using a Query to retrieve user
     def postCreate: Query[db.CreatePostInput, db.Post] =
       sql"INSERT INTO post (id, title, author, content) VALUES ($uuid, $text, $text, $text) RETURNING $fullPostFields"
-      .query(postCodec)
-      .gcontramap[db.CreatePostInput]
+        .query(postCodec)
+        .gcontramap[db.CreatePostInput]
 
 
 
   }
 
 
- val live : ZLayer[Has[DbSessionPool.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService : DbSessionPool.Service =>
+  val live : ZLayer[Has[DbSessionPool.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService : DbSessionPool.Service =>
 
-   for {
-     pool <-  dbService.pool
-     session <-  pool
-    prepared <- (for {
-      createPostPrepared <- session.prepare(Fragments.postCreate)
-      deletePostPrepared <- session.prepare(Fragments.postDelete(Fragments.byIdFragment))
-      getPostByIdPrepared <- session.prepare(Fragments.postQuery(Fragments.byIdFragment))
-      allPostsPrepared <- session.prepare(Fragments.postMetaQuery(Fragment.empty))
-    } yield new Service {
+    for {
+      pool <-  dbService.pool
+      session <-  pool
+      prepared <- (for {
+        createPostPrepared <- session.prepare(Fragments.postCreate)
+        deletePostPrepared <- session.prepare(Fragments.postDelete(Fragments.byIdFragment))
+        getPostByIdPrepared <- session.prepare(Fragments.postQuery(Fragments.byIdFragment))
+        allPostsPrepared <- session.prepare(Fragments.postMetaQuery(Fragment.empty))
+      } yield new Service {
 
-      override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] = pool.use {
-        session => session.unique(Fragments.postCreate.contramap(_ => input))
-      }
+        override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] =
+          createPostPrepared.unique(input)
+//          pool.use {
+//          session => session.unique(Fragments.postCreate.apply(input).fragment.sql)
+//        }
 
-      override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] = deletePostPrepared.execute(id).unit
+        override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] = deletePostPrepared.execute(id).unit
 
-      override def getPostById(id: UUID): ZIO[Any, Throwable, db.Post] = getPostByIdPrepared.unique(id)
-      
-      override def allPosts: fs2.Stream[zio.Task,io.conduktor.api.db.PostMeta] = allPostsPrepared.stream(skunk.Void, 32)
+        override def getPostById(id: UUID): ZIO[Any, Throwable, db.Post] = getPostByIdPrepared.unique(id)
 
-       }).toManagedZIO  
-  } yield prepared
- }
+        override def allPosts: fs2.Stream[zio.Task,io.conduktor.api.db.PostMeta] = allPostsPrepared.stream(skunk.Void, 32)
+
+      }).toManagedZIO
+    } yield prepared
+  }
 }
 
