@@ -41,23 +41,3 @@ object DbSessionPool {
   }
 }
 
-object DbSession {
-  type DbSession = Has[DbSession.Service]
-
-  trait Service {
-    def session: ZManaged[Any, Throwable, Session[Task]]
-  }
-
-  def session: ZManaged[DbSession.Service, Throwable, Session[Task]] =
-    ZManaged.accessManaged(_.session)
-
-  val live: ZLayer[Has[DbSessionPool.Service], Throwable, Has[DbSession.Service]] =
-    ZLayer.fromServiceManaged { poolService =>
-
-      poolService.pool.map { managedSession =>
-        new Service {
-          override def session: ZManaged[Any, Throwable, Session[Task]] = managedSession
-        }
-      }
-    }
-}

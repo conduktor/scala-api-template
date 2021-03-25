@@ -4,7 +4,6 @@
 - Listen (native postgres => stream => websocket)
 - JWT validation against auth0
 - Postgres, native, migrations with Prisma
-- graalVM
 - ZIO (effect, stream, config, tests)
 
 ## Git flow 
@@ -17,9 +16,6 @@
 
  - Intellij can't type properly macros (such as skunk's "sql" StringOps)
 Using Metals is therefore recommended when dealing with repositories
-
-- many libraries are not compatible at all with graalVM. (ex: google cloud logback)
-Also all classes using reflection must be added to reflect-config.json (ex: all GCP classes)
 
 ## TODOS
 - tagged types with codecs (server, db)

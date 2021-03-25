@@ -1,7 +1,6 @@
 package io.conduktor.api.db.repository
 
 
-
 import java.util.UUID
 
 import io.conduktor.api.db
@@ -16,25 +15,33 @@ import zio.{Has, ZIO, ZLayer}
 object PostRepository {
 
   type PostRepository = Has[PostRepository.Service]
+
   trait Service {
-    def createPost(input:db.CreatePostInput): ZIO[Any, Throwable, db.Post]
-    def deletePost(id:UUID): ZIO[Any, Throwable, Unit]
-    def getPostById(id:UUID): ZIO[Any, Throwable, db.Post]
+    def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post]
+
+    def deletePost(id: UUID): ZIO[Any, Throwable, Unit]
+
+    def getPostById(id: UUID): ZIO[Any, Throwable, db.Post]
+
     //paginated
-    def allPosts: fs2.Stream[zio.Task,db.PostMeta] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
+    def allPosts: ZIO[Any, Throwable, List[db.PostMeta]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
 
     //TODO example with LISTEN (ex: comments ?)
   }
-  def createPost(input:db.CreatePostInput): ZIO[PostRepository, Throwable, db.Post] = ZIO.accessM(_.get.createPost(input))
-  def deletePost(id:UUID): ZIO[PostRepository, Throwable, Unit] = ZIO.accessM(_.get.deletePost(id))
-  def getPostById(id:UUID): ZIO[PostRepository, Throwable, db.Post] = ZIO.accessM(_.get.getPostById(id))
-  def allPosts: ZIO[PostRepository, Nothing, fs2.Stream[zio.Task,db.PostMeta]] = ZIO.access(_.get.allPosts)
+
+  def createPost(input: db.CreatePostInput): ZIO[PostRepository, Throwable, db.Post] = ZIO.accessM(_.get.createPost(input))
+
+  def deletePost(id: UUID): ZIO[PostRepository, Throwable, Unit] = ZIO.accessM(_.get.deletePost(id))
+
+  def getPostById(id: UUID): ZIO[PostRepository, Throwable, db.Post] = ZIO.accessM(_.get.getPostById(id))
+
+  def allPosts: ZIO[PostRepository, Throwable, List[db.PostMeta]] = ZIO.accessM(_.get.allPosts)
 
   object Fragments {
 
 
-    private val postMetaCodec : Codec[db.PostMeta] =  (uuid ~ text ~ text ~ bool ~ timestamp(3)).gimap[db.PostMeta]
-    private val postCodec : Codec[db.Post] =  (postMetaCodec ~ text).gimap[db.Post]
+    private val postMetaCodec: Codec[db.PostMeta] = (uuid ~ text ~ text ~ bool ~ timestamp(3)).gimap[db.PostMeta]
+    private val postCodec: Codec[db.Post] = (postMetaCodec ~ text).gimap[db.Post]
 
 
     val fullPostFields: Fragment[skunk.Void] = sql"id, title, author, published, created_at, content"
@@ -55,38 +62,43 @@ object PostRepository {
       sql"INSERT INTO post (id, title, author, content) VALUES ($uuid, $text, $text, $text) RETURNING $fullPostFields"
         .query(postCodec)
         .gcontramap[db.CreatePostInput]
-
-
-
   }
 
-
-  val live : ZLayer[Has[DbSessionPool.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService : DbSessionPool.Service =>
+  val live: ZLayer[Has[DbSessionPool.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService: DbSessionPool.Service =>
 
     for {
-      pool <-  dbService.pool
-      session <-  pool
-      prepared <- (for {
-        createPostPrepared <- session.prepare(Fragments.postCreate)
-        deletePostPrepared <- session.prepare(Fragments.postDelete(Fragments.byIdFragment))
-        getPostByIdPrepared <- session.prepare(Fragments.postQuery(Fragments.byIdFragment))
-        allPostsPrepared <- session.prepare(Fragments.postMetaQuery(Fragment.empty))
-      } yield new Service {
+      preAllocated <- dbService.pool.preallocateManaged
+      pool <- preAllocated
+    } yield new Service {
 
-        override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] =
-          createPostPrepared.unique(input)
-//          pool.use {
-//          session => session.unique(Fragments.postCreate.apply(input).fragment.sql)
+      override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] = {
+        pool.use {
+          _.prepare(Fragments.postCreate).use(_.unique(input))
+        }
+      }
+
+      override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] =
+        pool.use {
+          _.prepare(Fragments.postDelete(Fragments.byIdFragment)).use(_.execute(id)).unit
+        }
+
+      override def getPostById(id: UUID): ZIO[Any, Throwable, db.Post] =
+        pool.use {
+          _.prepare(Fragments.postQuery(Fragments.byIdFragment)).use(_.unique(id))
+        }
+
+      // Skunk allows streaming pagination, but it requires keeping the connection opens
+      override def allPosts: ZIO[Any, Throwable, List[db.PostMeta]] =
+        pool.use { session =>
+          session.prepare(Fragments.postMetaQuery(Fragment.empty)).use(_.stream(skunk.Void, 64).compile.toList)
+        }
+
+
+//      override def allPostsPaginated(offset:Int, num:Int): ZIO[Any, Throwable, List[db.PostMeta]] =
+//        pool.use { session =>
+//          session.prepare(Fragments.postMetaQuery(Fragment.postMetaOffset)).use(_.stream(Offset, 32).compile.toList)
 //        }
-
-        override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] = deletePostPrepared.execute(id).unit
-
-        override def getPostById(id: UUID): ZIO[Any, Throwable, db.Post] = getPostByIdPrepared.unique(id)
-
-        override def allPosts: fs2.Stream[zio.Task,io.conduktor.api.db.PostMeta] = allPostsPrepared.stream(skunk.Void, 32)
-
-      }).toManagedZIO
-    } yield prepared
+    }
   }
 }
 

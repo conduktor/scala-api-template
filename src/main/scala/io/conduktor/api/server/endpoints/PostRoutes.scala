@@ -12,7 +12,6 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.ztapir._
 import zio._
-import zio.interop.catz._
 
 object PostRoutes {
 
@@ -67,7 +66,7 @@ object PostRoutes {
 //    .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error retreiving post")))
 
   private def allPostsServerLogic = PostRepository.allPosts
-      .flatMap(_.map(_.toServer).compile.toList)
+      .map(_.map(_.toServer))
       .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error listing post")))
 
   object Endpoints {

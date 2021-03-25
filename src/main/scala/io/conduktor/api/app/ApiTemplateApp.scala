@@ -2,13 +2,13 @@ package io.conduktor.api.app
 
 import io.conduktor.api.auth.UserAuthenticationLayer.AuthService
 import io.conduktor.api.config.AppConfig
+import io.conduktor.api.db.DbSessionPool
 import io.conduktor.api.db.repository.PostRepository
-import io.conduktor.api.db.{DbSession, DbSessionPool}
 import io.conduktor.api.server.Server
 import zio.logging._
+import zio.logging.slf4j.Slf4jLogger
 import zio.magic.ZioProvideMagicOps
 import zio.{App, ExitCode, ULayer, URIO, ZIO}
-import zio.logging.slf4j.Slf4jLogger
 
 object ApiTemplateApp extends App {
 
@@ -25,7 +25,6 @@ object ApiTemplateApp extends App {
     program
       .provideCustomMagicLayer(
         DbSessionPool.live,
-        DbSession.live,
         PostRepository.live,
         AuthService.live,
         AppConfig.layer.project(_.db),

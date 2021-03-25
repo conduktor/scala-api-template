@@ -18,7 +18,7 @@ jobs:
           java-version: 1.11
 
       - name: Run tests
-        run: sbt test
+        run: sbt clean test
 
       - name: Setup GCP Service Account
         uses: google-github-actions/setup-gcloud@master
@@ -33,7 +33,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          sbt docker
+          sbt docker:publish
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -44,7 +44,7 @@ jobs:
       - name: STAGING - Tag Docker Image
         if: github.ref == 'refs/heads/develop'
         run: |
-          docker image tag eu.gcr.io/conduktor/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
+          docker image tag eu.gcr.io/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
 
       - name: STAGING - Push Docker Image
         if: github.ref == 'refs/heads/develop'
@@ -90,7 +90,7 @@ jobs:
       - name: PROD - Tag Docker Image
         if: github.ref == 'refs/heads/main'
         run: |
-          docker image tag eu.gcr.io/conduktor/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest
+          docker image tag eu.gcr.io/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest
 
       - name: PROD - Push Docker Image
         if: github.ref == 'refs/heads/main'
@@ -130,12 +130,3 @@ jobs:
           --add-cloudsql-instances conduktor:europe-west1:conduktor-prod \
           --vpc-connector vpc-connector-to-cloudsql \
           --update-env-vars INSTANCE_CONNECTION_NAME="conduktor:europe-west1:conduktor-prod"
-
-      - name: Create GitHub release
-        if: github.ref == 'refs/heads/main'
-        uses: release-drafter/release-drafter@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: ${{ github.ref }}
-          version: ${{ github.ref }}

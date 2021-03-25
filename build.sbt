@@ -1,7 +1,7 @@
 import BuildHelper._
 import sbtbuildinfo.BuildInfoKey
 import complete.DefaultParsers._
-
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.Docker
 inThisBuild(
   List(
     organization := "io.conduktor",
@@ -80,13 +80,27 @@ val dbTestingStack   = Seq(embeddedPostgres)
 val dependencies =
   effectDependencies ++ dbDependencies ++ httpDependencies ++ jsonDependencies ++ loggingDependencies ++ configDependencies ++ apiDocsDependencies ++ jwtDependencies
 
+lazy val dockerSettings = Seq(
+  Docker / maintainer := "Conduktor LLC <support@conduktor.io>",
+  Docker / daemonUser := "conduktor",
+  Docker / dockerRepository   := Some("eu.gcr.io"),
+  dockerUpdateLatest := true,
+  dockerExposedPorts := Seq(8080),
+  dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre",
+//  Docker / dockerCommands := dockerCommands.value.flatMap {
+//    case cmd @ Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash && apk add shadow"))
+//    case other => List(other)
+//  }
+)
+
 lazy val root = project
   .in(file("."))
-  .enablePlugins(BuildInfoPlugin, sbtdocker.DockerPlugin, GraalVMNativeImagePlugin)
+  .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin)
   .settings(
     skip in publish := true
   )
   .settings(stdSettings("api-template"))
+  .settings(dockerSettings)
   .settings(
     name := "api-template",
     buildInfoKeys := Seq[BuildInfoKey](organization, moduleName, name, version, scalaVersion, sbtVersion, isSnapshot),
@@ -95,18 +109,7 @@ lazy val root = project
     libraryDependencies ++= dependencies,
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
-  .settings(
-    docker / dockerfile := NativeDockerfile(file("Dockerfile")),
-    docker / imageNames := Seq(ImageName(s"eu.gcr.io/conduktor/${name.value}:${dockerImageTag}")),
-    docker / dockerBuildArguments := sys.env.get(upx).map(s => Map("upx_compression" -> s)).getOrElse(Map.empty),
-    assembly / assemblyMergeStrategy := {
-      case "META-INF/maven/org.webjars/swagger-ui/pom.properties" => MergeStrategy.singleOrError
-      case x if x.endsWith("module-info.class")                   => MergeStrategy.discard
-      case x                                                      =>
-        val oldStrategy = (assemblyMergeStrategy in assembly).value
-        oldStrategy(x)
-    }
-  )
+
 
 def dockerImageTag: String = {
   import sys.process._
