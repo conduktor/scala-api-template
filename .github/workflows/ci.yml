@@ -82,7 +82,7 @@ jobs:
 
 
       ############   PROD  ################
-      - name: STAGING - Build Docker Image
+      - name: PROD - Build Docker Image
         if: github.ref == 'refs/heads/main'
         run: |
           sbt docker:publish

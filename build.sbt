@@ -1,4 +1,5 @@
 import BuildHelper._
+import com.typesafe.sbt.packager.docker.Cmd
 import sbtbuildinfo.BuildInfoKey
 import complete.DefaultParsers._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.Docker
@@ -88,11 +89,15 @@ lazy val dockerSettings = Seq(
   dockerUpdateLatest := true,
   dockerExposedPorts := Seq(8080),
   dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre",
+  Docker / dockerCommands := dockerCommands.value.flatMap {
+    case cmd @ Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash && apk add shadow"))
+    case other => List(other)
+  }
 )
 
 lazy val root = project
   .in(file("."))
-  .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin)
+  .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin, AshScriptPlugin)
   .settings(
     skip in publish := true
   )
