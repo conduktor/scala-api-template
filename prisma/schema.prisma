@@ -5,7 +5,7 @@ datasource db {
 
 
 model Post {
-  id        String     @id @default(uuid()) @db.Uuid
+  id        String     @id @db.Uuid
   title     String
   published Boolean @default(false)
   author  String

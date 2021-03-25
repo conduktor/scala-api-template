@@ -19,7 +19,7 @@ package object endpoints {
       statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
       statusMapping(StatusCode.Unauthorized, emptyOutput.map(_ => Unauthorized)(_ => ())),
       statusMapping(StatusCode.NoContent, emptyOutput.map(_ => NoContent)(_ => ())),
-      statusDefaultMapping(jsonBody[Unknown].description("unknown"))
+      statusDefaultMapping(jsonBody[ServerError].description("unknown"))
     )
   )
 

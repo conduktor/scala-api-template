@@ -94,7 +94,7 @@ object UserAuthenticationLayer {
         }
 
         private val validateClaims = (claims: JwtClaim) => withJavaClock.flatMap { implicit clock =>
-          if (auth0Conf.audience.map(claims.isValid(s"https://${auth0Conf.domain}/", _)).getOrElse(claims.isValid(s"https://${auth0Conf.domain}/"))) {
+          if (claims.isValid(s"https://${auth0Conf.domain}/")) {
             ZIO.succeed(claims)
           } else {
             ZIO.fail(new Exception("The JWT did not pass validation"))

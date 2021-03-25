@@ -1,5 +1,6 @@
 package io.conduktor.api.server.endpoints
 
+
 import java.util.UUID
 
 import io.circe.generic.auto._
@@ -11,6 +12,7 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.ztapir._
 import zio._
+import zio.interop.catz._
 
 object PostRoutes {
 
@@ -33,15 +35,23 @@ object PostRoutes {
     )
   }
 
-  private def createPostServerLogic(user: User, post: server.CreatePostInput): ZIO[PostRepository, ErrorInfo, server.Post] =
-    PostRepository.createPost(
-      db.CreatePostInput(
-        title = post.title,
-        content = post.content,
-        author = user.name
-      )
-    ).map(_.toServer)
+  private def createPostServerLogic(user: User, post: server.CreatePostInput): ZIO[PostRepository, ErrorInfo, server.Post] = {
+
+    (for {
+      uuid <- ZIO.effect(java.util.UUID.randomUUID())
+      post <- PostRepository.createPost(
+        db.CreatePostInput(
+          id = uuid,
+          title = post.title,
+          content = post.content,
+          author = user.name
+        )
+      ).map(_.toServer)
+    } yield post)
       .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error creating post")))
+
+
+  }
 
   private def deletePostServerLogic(id:  UUID) = PostRepository.deletePost(id)
     .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error deleting post")))
@@ -50,10 +60,15 @@ object PostRoutes {
     .map(_.toServer)
     .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error deleting post")))
 
+
+  // TODO paginate stream
 //  private def allPosts = PostRepository.allPosts
 //    .map(_.map(_.toServer))
-//    .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error deleting post")))
+//    .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error retreiving post")))
 
+  private def allPostsServerLogic = PostRepository.allPosts
+      .flatMap(_.map(_.toServer).compile.toList)
+      .mapError(err => ServerError(Option(err.getMessage).getOrElse("Error listing post")))
 
   object Endpoints {
 
@@ -62,7 +77,8 @@ object PostRoutes {
     def all = List(
       createPostEndpoint,
       deletePostEndpoint,
-      getPostByIdEndpoint
+      getPostByIdEndpoint,
+      allPostsEndpoint
     )
 
     def createPostEndpoint = secureEndpoint
@@ -90,6 +106,13 @@ object PostRoutes {
       .serverLogic {
         case (_, id) => getPostByIdServerLogic(id)
       }
+
+
+    def allPostsEndpoint = secureEndpoint
+      .get
+      .in(BASE_PATH )
+      .out(jsonBody[List[server.PostMeta]])
+      .serverLogic(_ => allPostsServerLogic)
 
 //    val allPostsEndpoint = secureEndpoint
 //      .get

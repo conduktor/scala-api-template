@@ -15,9 +15,7 @@ import zio.interop.catz._
  */
 object RoutesInterpreter {
   val routes: HttpRoutes[RIO[PostRoutes.Env with Clock, *]] =
-    ZHttp4sServerInterpreter.from(List(
-      PostRoutes.Endpoints.createPostEndpoint.widen[PostRoutes.Env],
-      PostRoutes.Endpoints.deletePostEndpoint.widen[PostRoutes.Env],
-      PostRoutes.Endpoints.getPostByIdEndpoint.widen[PostRoutes.Env]
-    )).toRoutes
+    ZHttp4sServerInterpreter.from(
+      PostRoutes.Endpoints.all.map(_.widen[PostRoutes.Env])
+   ).toRoutes
 }

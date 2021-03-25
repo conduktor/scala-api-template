@@ -1,5 +1,7 @@
 package io.conduktor.api.db.repository
 
+
+
 import java.util.UUID
 
 import io.conduktor.api.db
@@ -7,7 +9,6 @@ import io.conduktor.api.db.DbSession
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
-
 import zio.interop.catz._
 import zio.{Has, ZIO, ZLayer}
 
@@ -37,7 +38,7 @@ object PostRepository {
 
 
     val fullPostFields: Fragment[skunk.Void] = sql"id, title, author, published, created_at, content"
-    val byIdFragment: Fragment[UUID] = sql"where id = $uuid" 
+    val byIdFragment: Fragment[UUID] = sql"where id = $uuid"
 
 
     def postMetaQuery[A](where: Fragment[A]): Query[A, db.PostMeta] =
@@ -49,12 +50,12 @@ object PostRepository {
     def postDelete[A](where: Fragment[A]): Command[A] =
       sql"DELETE FROM post $where".command
 
-    // using a Query to retrieve user  
-    def postCreate: Query[db.CreatePostInput, db.Post] = 
-      sql"INSERT INTO post (title, author, content) VALUES ($text, $text, $text) RETURNING $fullPostFields"
+    // using a Query to retrieve user
+    def postCreate: Query[db.CreatePostInput, db.Post] =
+      sql"INSERT INTO post (id, title, author, content) VALUES ($uuid, $text, $text, $text) RETURNING $fullPostFields"
       .query(postCodec)
       .gcontramap[db.CreatePostInput]
-    
+
 
 
   }
@@ -78,8 +79,8 @@ TODO test with a single-session pool and multiple services + verify session clos
 
       override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] = createPostPrepared.unique(input)
 
-      override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] = deletePostPrepared.execute(id).unit 
-      
+      override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] = deletePostPrepared.execute(id).unit
+
       override def getPostById(id: UUID): ZIO[Any, Throwable, db.Post] = getPostByIdPrepared.unique(id)
       
       override def allPosts: fs2.Stream[zio.Task,io.conduktor.api.db.PostMeta] = allPostsPrepared.stream(skunk.Void, 32)

@@ -31,6 +31,7 @@ case class PostMeta(
 )
 
  case class CreatePostInput(
+   id: UUID,
   title: String,
   author: String,
   content: String
