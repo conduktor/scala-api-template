@@ -33,7 +33,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          sbt docker:publish
+          sbt docker:publishLocal
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -44,7 +44,7 @@ jobs:
       - name: STAGING - Tag Docker Image
         if: github.ref == 'refs/heads/develop'
         run: |
-          docker image tag eu.gcr.io/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
+          docker image tag eu.gcr.io/conduktor/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
 
       - name: STAGING - Push Docker Image
         if: github.ref == 'refs/heads/develop'
