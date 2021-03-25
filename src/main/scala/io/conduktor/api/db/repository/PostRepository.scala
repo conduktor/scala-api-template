@@ -5,7 +5,7 @@ package io.conduktor.api.db.repository
 import java.util.UUID
 
 import io.conduktor.api.db
-import io.conduktor.api.db.DbSession
+import io.conduktor.api.db.{DbSession, DbSessionPool}
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
@@ -61,15 +61,11 @@ object PostRepository {
   }
 
 
-/*
-I feel a bit weird using a session to prepare the queries
-It means we have always a single session per service + keep session open forever ?
-TODO test with a single-session pool and multiple services + verify session close/revive (set a connection timeout art a few secs and spam)
-*/
- val live : ZLayer[Has[DbSession.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService : DbSession.Service =>
+ val live : ZLayer[Has[DbSessionPool.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService : DbSessionPool.Service =>
 
    for {
-    session <-  dbService.session
+     pool <-  dbService.pool
+     session <-  pool
     prepared <- (for {
       createPostPrepared <- session.prepare(Fragments.postCreate)
       deletePostPrepared <- session.prepare(Fragments.postDelete(Fragments.byIdFragment))
@@ -77,7 +73,9 @@ TODO test with a single-session pool and multiple services + verify session clos
       allPostsPrepared <- session.prepare(Fragments.postMetaQuery(Fragment.empty))
     } yield new Service {
 
-      override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] = createPostPrepared.unique(input)
+      override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] = pool.use {
+        session => session.unique(Fragments.postCreate.contramap(_ => input))
+      }
 
       override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] = deletePostPrepared.execute(id).unit
 

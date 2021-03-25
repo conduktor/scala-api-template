@@ -25,6 +25,10 @@ package object endpoints {
 
   val secureEndpoint: ZPartialServerEndpoint[AuthService, User, Unit, ErrorInfo, Unit] = baseEndpoint
     .in(header[String]("Authorization"))
-    .zServerLogicForCurrent(AuthService.auth(_).mapError(_ => Unauthorized))
+    .zServerLogicForCurrent(AuthService.auth(_).mapError(e => {
+      println("AUTH ERROR" + e.getMessage)
+      e.printStackTrace()
+      Unauthorized
+    }))
 
 }
