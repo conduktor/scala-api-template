@@ -84,8 +84,7 @@ lazy val dockerSettings = Seq(
   Docker / maintainer := "Conduktor LLC <support@conduktor.io>",
   Docker / daemonUser := "conduktor",
   Docker / dockerRepository   := Some("eu.gcr.io"),
-  Docker / packageName := "conduktor/api-template",
-
+  Docker / packageName := sys.env.getOrElse("DOCKER_PACKAGE", ""),
   dockerUpdateLatest := true,
   dockerExposedPorts := Seq(8080),
   dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre",

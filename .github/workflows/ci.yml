@@ -31,25 +31,20 @@ jobs:
         run: |
           gcloud auth configure-docker
 
-      - name: Build Docker Image
+      - name: STAGING - Build Docker Image
+        if: github.ref == 'refs/heads/develop'
         run: |
-          sbt docker:publishLocal
+          sbt docker:publish
+        env:
+          DOCKER_PACKAGE: ${{ secrets.GCP_PROJECT_ID }}/api-template
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+
+#      - name: Setup Node.js
+#        uses: actions/setup-node@v2
+#        with:
+#          node-version: '14'
 
       ############   STAGING  ################
-      - name: STAGING - Tag Docker Image
-        if: github.ref == 'refs/heads/develop'
-        run: |
-          docker image tag eu.gcr.io/conduktor/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
-
-      - name: STAGING - Push Docker Image
-        if: github.ref == 'refs/heads/develop'
-        run: |
-          docker push eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template:latest
 
 #      - name: STAGING - Init CloudSQL Proxy
 #        uses: mattes/gce-cloudsql-proxy-action@v1
@@ -87,15 +82,13 @@ jobs:
 
 
       ############   PROD  ################
-      - name: PROD - Tag Docker Image
+      - name: STAGING - Build Docker Image
         if: github.ref == 'refs/heads/main'
         run: |
-          docker image tag eu.gcr.io/api-template eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest
+          sbt docker:publish
+        env:
+          DOCKER_PACKAGE: ${{ secrets.GCP_PROJECT_ID }}/api-template-prod
 
-      - name: PROD - Push Docker Image
-        if: github.ref == 'refs/heads/main'
-        run: |
-          docker push eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest
 
 #      - name: PROD - Init CloudSQL Proxy
 #        uses: mattes/gce-cloudsql-proxy-action@v1
