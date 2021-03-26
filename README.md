@@ -1,5 +1,10 @@
 # scala-api-template
 
+A template of API we'll use at Conduktor, to work with this template of Front-end: https://github.com/conduktor/react-app-template.
+
+
+## Requirements / Tech
+
 - CRUD (http4s, circe, tapir)
 - OpenApi exposed via tapir
 - JWT validation against auth0 
