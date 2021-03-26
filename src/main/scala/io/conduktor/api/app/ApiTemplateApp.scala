@@ -31,7 +31,7 @@ object ApiTemplateApp extends App {
         AppConfig.layer.project(_.auth0),
         logLayerLive
       ).tapError(
-      err => ZIO.effect(Option(err.getMessage).fold(err.printStackTrace())(println(_)))
+        err => ZIO.effect(Option(err.getMessage).fold(err.printStackTrace())(println(_)))
      )
       .exitCode
 

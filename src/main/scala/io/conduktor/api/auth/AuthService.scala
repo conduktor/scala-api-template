@@ -37,20 +37,15 @@ object UserAuthenticationLayer {
         def auth(token: String): Task[User] = {
 
           (for {
-            _ <- ZIO.effectTotal(println("DEBUG >>>>> auth"))
             bearer <-    ZIO.fromOption {
               token match {
                 case s"Bearer $a" => Some(a)
                 case _ => None
               }
             }.mapError(_ => new Throwable("Invalid auth header"))
-            _ <- ZIO.effectTotal(println("DEBUG >>>>> bearer"))
             claims <- validateJwt(bearer)
-            _ <- ZIO.effectTotal(println("DEBUG >>>>> validated"))
             json <- ZIO.fromEither(io.circe.parser.parse(claims.content))
-            _ <- ZIO.effectTotal(println("DEBUG >>>>> parsed"))
             user <- ZIO.fromEither(json.as[User])
-            _ <- ZIO.effectTotal(println("DEBUG >>>>> userOK"))
           } yield user
             )
             //log
