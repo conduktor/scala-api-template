@@ -1,10 +1,10 @@
-package io.conduktor.api.app
+package io.conduktor.api
 
 import io.conduktor.api.auth.UserAuthenticationLayer.AuthService
 import io.conduktor.api.config.AppConfig
 import io.conduktor.api.db.DbSessionPool
 import io.conduktor.api.db.repository.PostRepository
-import io.conduktor.api.server.Server
+import io.conduktor.api.http.Server
 
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
@@ -35,7 +35,8 @@ object ApiTemplateApp extends App {
       .tapError(err => ZIO.effect(Option(err.getMessage).fold(err.printStackTrace())(println(_))))
       .exitCode
 
-  private val program = for {
-    _ <- Server.serve
-  } yield ()
+  private val program =
+    for {
+      _ <- Server.serve
+    } yield ()
 }

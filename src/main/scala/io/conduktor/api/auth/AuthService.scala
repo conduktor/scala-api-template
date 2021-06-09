@@ -1,22 +1,22 @@
 package io.conduktor.api.auth
 
-import java.time.{Instant, OffsetDateTime, ZoneId}
-
 import com.auth0.jwk.UrlJwkProvider
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import io.conduktor.api.config.Auth0Config
 import pdi.jwt.{JwtAlgorithm, JwtBase64, JwtCirce, JwtClaim}
-
 import zio._
 import zio.clock.Clock
+
+import java.time.{Instant, OffsetDateTime, ZoneId}
 
 object UserAuthenticationLayer {
   type AuthService = Has[AuthService.Service]
 
-  final case class User(name: String)
-
+  final case class User(name: NonEmptyString)
   object User {
+    import io.circe.refined._
     implicit val userCodec: Codec[User] = deriveCodec
   }
 
@@ -38,7 +38,7 @@ object UserAuthenticationLayer {
                               case s"Bearer $a" => Some(a)
                               case _            => None
                             }
-                          }.mapError(_ => new Throwable("Invalid auth header"))
+                          }.orElseFail(new Throwable("Invalid auth header"))
                 claims <- validateJwt(bearer)
                 json   <- ZIO.fromEither(io.circe.parser.parse(claims.content))
                 user   <- ZIO.fromEither(json.as[User])

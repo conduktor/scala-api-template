@@ -52,13 +52,13 @@ val jwtDependencies = Seq(
 val jsonDependencies = Seq(
   "io.circe"                    %% "circe-core"       % circeVersion,
   "io.circe"                    %% "circe-generic"    % circeVersion,
-  "io.circe"                    %% "circe-shapes"     % circeVersion,
   "io.circe"                    %% "circe-parser"     % circeVersion,
+  "io.circe"                    %% "circe-refined"    % circeVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion
 )
 
 val loggingDependencies = Seq(
-  "dev.zio" %% "zio-logging-slf4j" % "0.5.8",
+  "dev.zio"         %% "zio-logging-slf4j"            % "0.5.8",
   "com.google.cloud" % "google-cloud-logging-logback" % "0.120.2-alpha"
 )
 
@@ -78,7 +78,18 @@ val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.3"
 val dbTestingStack   = Seq(embeddedPostgres)
 
 val dependencies =
-  effectDependencies ++ dbDependencies ++ httpDependencies ++ jsonDependencies ++ loggingDependencies ++ configDependencies ++ apiDocsDependencies ++ jwtDependencies
+  effectDependencies ++
+    dbDependencies ++
+    httpDependencies ++
+    jsonDependencies ++
+    loggingDependencies ++
+    configDependencies ++
+    apiDocsDependencies ++
+    jwtDependencies ++
+    Seq(
+      "io.estatico" %% "newtype" % "0.4.4",
+      "eu.timepit"  %% "refined" % "0.9.26"
+    )
 
 lazy val dockerSettings = Seq(
   Docker / maintainer := "Conduktor LLC <support@conduktor.io>",

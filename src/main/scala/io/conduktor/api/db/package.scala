@@ -1,37 +1,12 @@
-package io.conduktor.api.db
+package io.conduktor.api
 
-import java.time.LocalDateTime
-import java.util.UUID
+import eu.timepit.refined.types.all.NonEmptyString
+import skunk.Codec
+import skunk.codec.all.text
 
-import shapeless.tag
-import shapeless.tag.@@
+package object db {
 
-object Codecs {
+  final val nonEmptyText: Codec[NonEmptyString] =
+    text.imap[NonEmptyString](NonEmptyString.unsafeFrom)(_.value)
 
-  // TODO write a generic skunk codec for tagged types
-  trait PostIdTag
-  type PostId = UUID @@ PostIdTag
-  object PostId {
-    def apply(v: UUID): PostId = tag[PostIdTag][UUID](v)
-  }
 }
-
-final case class Post(
-  meta: PostMeta,
-  content: String
-)
-
-final case class PostMeta(
-  id: UUID,
-  title: String,
-  author: String,
-  published: Boolean,
-  createdAt: LocalDateTime
-)
-
-final case class CreatePostInput(
-  id: UUID,
-  title: String,
-  author: String,
-  content: String
-)
