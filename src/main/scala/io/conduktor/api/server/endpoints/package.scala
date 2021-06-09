@@ -1,6 +1,5 @@
 package io.conduktor.api.server
 
-
 import io.circe.generic.auto._
 import io.conduktor.api.auth.UserAuthenticationLayer._
 import sttp.model.StatusCode
@@ -11,7 +10,6 @@ import sttp.tapir.ztapir._
 
 
 package object endpoints {
-
 
   // here we are defining an error output, but the same can be done for regular outputs
   val baseEndpoint: Endpoint[Unit, ErrorInfo, Unit, Any] = endpoint.errorOut(

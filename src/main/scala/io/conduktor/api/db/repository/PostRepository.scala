@@ -1,6 +1,5 @@
 package io.conduktor.api.db.repository
 
-
 import java.util.UUID
 
 import io.conduktor.api.db
@@ -8,9 +7,9 @@ import io.conduktor.api.db.DbSessionPool
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
+
 import zio.interop.catz._
 import zio.{Has, ZIO, ZLayer}
-
 
 object PostRepository {
 
@@ -24,7 +23,9 @@ object PostRepository {
     def getPostById(id: UUID): ZIO[Any, Throwable, db.Post]
 
     //paginated
-    def allPosts: ZIO[Any, Throwable, List[db.PostMeta]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
+    def allPosts: ZIO[Any, Throwable, List[
+      db.PostMeta
+    ]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
 
     //TODO example with LISTEN (ex: comments ?)
   }
@@ -39,14 +40,11 @@ object PostRepository {
 
   object Fragments {
 
-
     private val postMetaCodec: Codec[db.PostMeta] = (uuid ~ text ~ text ~ bool ~ timestamp(3)).gimap[db.PostMeta]
-    private val postCodec: Codec[db.Post] = (postMetaCodec ~ text).gimap[db.Post]
-
+    private val postCodec: Codec[db.Post]         = (postMetaCodec ~ text).gimap[db.Post]
 
     val fullPostFields: Fragment[skunk.Void] = sql"id, title, author, published, created_at, content"
-    val byIdFragment: Fragment[UUID] = sql"where id = $uuid"
-
+    val byIdFragment: Fragment[UUID]         = sql"where id = $uuid"
 
     def postMetaQuery[A](where: Fragment[A]): Query[A, db.PostMeta] =
       sql"SELECT id, title, author, published, created_at FROM post $where".query(postMetaCodec)
@@ -65,17 +63,15 @@ object PostRepository {
   }
 
   val live: ZLayer[Has[DbSessionPool.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService: DbSessionPool.Service =>
-
     for {
       preAllocated <- dbService.pool.preallocateManaged
-      pool <- preAllocated
+      pool         <- preAllocated
     } yield new Service {
 
-      override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] = {
+      override def createPost(input: db.CreatePostInput): ZIO[Any, Throwable, db.Post] =
         pool.use {
           _.prepare(Fragments.postCreate).use(_.unique(input))
         }
-      }
 
       override def deletePost(id: UUID): ZIO[Any, Throwable, Unit] =
         pool.use {
@@ -93,7 +89,6 @@ object PostRepository {
           session.prepare(Fragments.postMetaQuery(Fragment.empty)).use(_.stream(skunk.Void, 64).compile.toList)
         }
 
-
 //      override def allPostsPaginated(offset:Int, num:Int): ZIO[Any, Throwable, List[db.PostMeta]] =
 //        pool.use { session =>
 //          session.prepare(Fragments.postMetaQuery(Fragment.postMetaOffset)).use(_.stream(Offset, 32).compile.toList)
@@ -101,4 +96,3 @@ object PostRepository {
     }
   }
 }
-

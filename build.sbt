@@ -1,8 +1,9 @@
 import BuildHelper._
 import com.typesafe.sbt.packager.docker.Cmd
-import sbtbuildinfo.BuildInfoKey
-import complete.DefaultParsers._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.Docker
+import complete.DefaultParsers._
+import sbtbuildinfo.BuildInfoKey
+
 inThisBuild(
   List(
     organization := "io.conduktor",
@@ -16,8 +17,6 @@ addCommandAlias("fix", "; all compile:scalafix test:scalafix; all scalafmtSbt sc
 addCommandAlias("check", "; scalafmtSbtCheck; scalafmtCheckAll; compile:scalafix --check; test:scalafix --check")
 addCommandAlias("updates", ";dependencyUpdates; reload plugins; dependencyUpdates; reload return")
 
-
-
 val upx = "UPX_COMPRESSION"
 
 val zioVersion       = "1.0.5"
@@ -28,8 +27,8 @@ val circeVersion     = "0.13.0"
 
 val effectDependencies = Seq(
   "dev.zio"              %% "zio"          % zioVersion,
-  "dev.zio"              %% "zio-test"     % zioVersion % "test",
-  "dev.zio"              %% "zio-test-sbt" % zioVersion % "test",
+  "dev.zio"              %% "zio-test"     % zioVersion % Test,
+  "dev.zio"              %% "zio-test-sbt" % zioVersion % Test,
   "io.github.kitlangton" %% "zio-magic"    % "0.1.12"
 )
 
@@ -84,14 +83,14 @@ val dependencies =
 lazy val dockerSettings = Seq(
   Docker / maintainer := "Conduktor LLC <support@conduktor.io>",
   Docker / daemonUser := "conduktor",
-  Docker / dockerRepository   := Some("eu.gcr.io"),
+  Docker / dockerRepository := Some("eu.gcr.io"),
   Docker / packageName := sys.env.getOrElse("DOCKER_PACKAGE", ""),
   dockerUpdateLatest := true,
   dockerExposedPorts := Seq(8080),
   dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre",
   Docker / dockerCommands := dockerCommands.value.flatMap {
     case cmd @ Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash && apk add shadow"))
-    case other => List(other)
+    case other                => List(other)
   }
 )
 
@@ -99,7 +98,7 @@ lazy val root = project
   .in(file("."))
   .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin, AshScriptPlugin)
   .settings(
-    skip in publish := true
+    (publish / skip) := true
   )
   .settings(stdSettings("api-template"))
   .settings(dockerSettings)
@@ -111,7 +110,6 @@ lazy val root = project
     libraryDependencies ++= dependencies,
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
-
 
 def dockerImageTag: String = {
   import sys.process._
@@ -129,25 +127,23 @@ prisma := {
   val args: Seq[String] = spaceDelimited("<arg>").parsed
 
   val res = args match {
-    case Seq("create") =>
+    case Seq("create")                   =>
       println("Creating migration SQL file...")
       MigrationCommands.createMigration
-    case Seq("apply", "dev") =>
+    case Seq("apply", "dev")             =>
       println("Applying migrations to dev database...")
       MigrationCommands.applyMigrationDev
     case Seq("apply", "prod", "--force") =>
       println("Applying migrations to prod database...")
       MigrationCommands.applyProd_danger
-    case Seq("status") =>
+    case Seq("status")                   =>
       println("Fetching migration status...")
       MigrationCommands.getMigrationStatus
-    case Seq("validate") =>
+    case Seq("validate")                 =>
       println("Validating schema...")
       MigrationCommands.validateSchema
-    case _ => "Unknown command"
+    case _                               => "Unknown command"
   }
   println(res)
 }
 addCommandAlias("migration", ";prisma")
-
-
