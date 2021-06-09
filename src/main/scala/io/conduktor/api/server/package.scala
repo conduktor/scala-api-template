@@ -1,15 +1,14 @@
 package io.conduktor.api.server
 
-
 import java.time.LocalDateTime
 import java.util.UUID
 
-case class Post(
+final case class Post(
   meta: PostMeta,
-  content: String,
+  content: String
 )
 
-case class PostMeta(
+final case class PostMeta(
   id: UUID,
   title: String,
   author: String,
@@ -17,7 +16,7 @@ case class PostMeta(
   createdAt: LocalDateTime
 )
 
- case class CreatePostInput(
+final case class CreatePostInput(
   title: String,
   content: String
 )
