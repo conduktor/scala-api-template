@@ -1,10 +1,10 @@
 package io.conduktor.api.auth
 
 import com.auth0.jwk.UrlJwkProvider
-import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import io.conduktor.api.config.Auth0Config
+import io.conduktor.api.types.UserName
 import pdi.jwt.{JwtAlgorithm, JwtBase64, JwtCirce, JwtClaim}
 import zio._
 import zio.clock.Clock
@@ -14,9 +14,8 @@ import java.time.{Instant, OffsetDateTime, ZoneId}
 object UserAuthenticationLayer {
   type AuthService = Has[AuthService.Service]
 
-  final case class User(name: NonEmptyString)
+  final case class User(name: UserName)
   object User {
-    import io.circe.refined._
     implicit val userCodec: Codec[User] = deriveCodec
   }
 

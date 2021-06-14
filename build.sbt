@@ -21,7 +21,7 @@ val upx = "UPX_COMPRESSION"
 
 val zioVersion       = "1.0.5"
 val zioConfigVersion = "1.0.1"
-val tapirVersion     = "0.17.18"
+val tapirVersion     = "0.17.19"
 val http4sVersion    = "0.21.20"
 val circeVersion     = "0.13.0"
 
@@ -41,7 +41,8 @@ val httpDependencies = Seq(
   "org.http4s"                  %% "http4s-blaze-server"     % http4sVersion,
   "org.http4s"                  %% "http4s-circe"            % http4sVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-zio"               % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion
 )
 
 val jwtDependencies = Seq(
@@ -119,7 +120,8 @@ lazy val root = project
     buildInfoPackage := "io.conduktor",
     buildInfoObject := "BuildInfo",
     libraryDependencies ++= dependencies,
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    scalacOptions += "-Ymacro-annotations"
   )
 
 def dockerImageTag: String = {
