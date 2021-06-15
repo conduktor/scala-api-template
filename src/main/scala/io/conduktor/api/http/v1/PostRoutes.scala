@@ -5,6 +5,7 @@ import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import io.conduktor.api.auth.UserAuthenticationLayer._
 import io.conduktor.api.core
+import io.conduktor.api.core.Post
 import io.conduktor.api.core.PostService.PostService
 import io.conduktor.api.types.UserName
 import sttp.tapir.generic.auto._
@@ -51,7 +52,7 @@ object PostRoutes {
 
   private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[PostService, ErrorInfo, PostDTO] =
     ZIO
-      .accessM[PostService](_.get.createPost(user, post.title, post.content))
+      .accessM[PostService](_.get.createPost(user, Post.Title(post.title), Post.Content(post.content)))
       .bimap(serverError("Error creating post"), PostDTO.from)
 
   private def deletePostServerLogic(id: UUID): ZIO[PostService, ServerError, Unit] =
