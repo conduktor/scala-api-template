@@ -2,9 +2,9 @@ package io.conduktor.api
 
 import io.conduktor.api.auth.UserAuthenticationLayer.AuthService
 import io.conduktor.api.config.AppConfig
-import io.conduktor.api.core.PostService
+import io.conduktor.api.core.PostServiceLive
 import io.conduktor.api.db.DbSessionPool
-import io.conduktor.api.db.repository.PostRepository
+import io.conduktor.api.db.repository.DbPostRepository
 import io.conduktor.api.http.Server
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
@@ -26,12 +26,12 @@ object ApiTemplateApp extends App {
     program
       .provideCustomMagicLayer(
         DbSessionPool.layer,
-        PostRepository.live,
+        DbPostRepository.layer,
         AuthService.live,
         AppConfig.layer.project(_.db),
         AppConfig.layer.project(_.auth0),
         logLayerLive,
-        PostService.live
+        PostServiceLive.layer
       )
       .tapError(err => ZIO.effect(Option(err.getMessage).fold(err.printStackTrace())(println(_))))
       .exitCode

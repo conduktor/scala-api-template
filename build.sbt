@@ -19,8 +19,8 @@ addCommandAlias("updates", ";dependencyUpdates; reload plugins; dependencyUpdate
 
 val upx = "UPX_COMPRESSION"
 
-val zioVersion       = "1.0.5"
-val zioConfigVersion = "1.0.1"
+val zioVersion       = "1.0.9"
+val zioConfigVersion = "1.0.6"
 val tapirVersion     = "0.17.19"
 val http4sVersion    = "0.21.20"
 val circeVersion     = "0.13.0"

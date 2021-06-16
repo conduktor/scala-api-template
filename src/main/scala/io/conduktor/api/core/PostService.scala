@@ -3,10 +3,9 @@ package io.conduktor.api.core
 import eu.timepit.refined.types.string.NonEmptyString
 import io.conduktor.api.auth.UserAuthenticationLayer.User
 import io.conduktor.api.core.Post.{Content, Title}
-import io.conduktor.api.db.repository.PostRepository.PostRepository
-import io.conduktor.api.db.repository.{PostRepository}
+import io.conduktor.api.db.repository.PostRepository
 import io.estatico.newtype.macros.newtype
-import zio.{Has, Task, ZIO, ZLayer}
+import zio.{Function1ToLayerSyntax, Has, Task, URLayer, ZIO}
 
 import java.util.UUID
 
@@ -22,7 +21,7 @@ object Post {
   @newtype case class Content(value: String)
 }
 
-trait PostService  {
+trait PostService {
   def createPost(user: User, title: Title, content: Content): Task[Post]
 
   def deletePost(uuid: UUID): Task[Unit]
@@ -31,13 +30,8 @@ trait PostService  {
 
   def all: Task[List[Post]]
 }
-object PostService {
-  type PostService = Has[PostServiceLive]
 
-  val live: ZLayer[PostRepository, Nothing, PostService] = ZLayer.fromService(new PostServiceLive(_))
-}
-
-final class PostServiceLive(db: PostRepository.Service) extends PostService {
+final class PostServiceLive(db: PostRepository) extends PostService {
 
   override def createPost(user: User, title: Title, content: Content): Task[Post] =
     for {
@@ -53,4 +47,8 @@ final class PostServiceLive(db: PostRepository.Service) extends PostService {
   override def findById(id: UUID): Task[Post] = db.findPostById(id)
 
   override def all: Task[List[Post]] = db.allPosts
+}
+
+object PostServiceLive {
+  val layer: URLayer[Has[PostRepository], Has[PostService]] = (new PostServiceLive(_)).toLayer
 }

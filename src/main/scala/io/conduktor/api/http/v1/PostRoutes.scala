@@ -5,8 +5,7 @@ import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import io.conduktor.api.auth.UserAuthenticationLayer._
 import io.conduktor.api.core
-import io.conduktor.api.core.Post
-import io.conduktor.api.core.PostService.PostService
+import io.conduktor.api.core.{Post, PostService}
 import io.conduktor.api.types.UserName
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
@@ -45,29 +44,29 @@ object CreatePostInput {
 
 object PostRoutes {
 
-  type Env = AuthService with PostService
+  type Env = AuthService with Has[PostService]
 
   private def serverError(defaultMessage: => String)(error: Throwable): ServerError =
     ServerError(Option(error.getMessage).getOrElse(defaultMessage))
 
-  private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[PostService, ErrorInfo, PostDTO] =
+  private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[Has[PostService], ErrorInfo, PostDTO] =
     ZIO
-      .accessM[PostService](_.get.createPost(user, Post.Title(post.title), Post.Content(post.content)))
+      .accessM[Has[PostService]](_.get.createPost(user, Post.Title(post.title), Post.Content(post.content)))
       .bimap(serverError("Error creating post"), PostDTO.from)
 
-  private def deletePostServerLogic(id: UUID): ZIO[PostService, ServerError, Unit] =
+  private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ServerError, Unit] =
     ZIO
-      .accessM[PostService](_.get.deletePost(id))
+      .accessM[Has[PostService]](_.get.deletePost(id))
       .mapError(serverError(s"Error deleting post $id"))
 
-  private def getPostByIdServerLogic(id: UUID): ZIO[PostService, ServerError, PostDTO] =
+  private def getPostByIdServerLogic(id: UUID): ZIO[Has[PostService], ServerError, PostDTO] =
     ZIO
-      .accessM[PostService](_.get.findById(id))
+      .accessM[Has[PostService]](_.get.findById(id))
       .bimap(serverError(s"Error finding post $id"), PostDTO.from)
 
-  private def allPostsServerLogic: ZIO[PostService, ServerError, List[PostDTO]] =
+  private def allPostsServerLogic: ZIO[Has[PostService], ServerError, List[PostDTO]] =
     ZIO
-      .accessM[PostService](_.get.all)
+      .accessM[Has[PostService]](_.get.all)
       .bimap(serverError("Error listing posts"), _.map(PostDTO.from))
 
   object Endpoints {

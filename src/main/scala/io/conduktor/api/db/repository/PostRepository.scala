@@ -4,13 +4,13 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.conduktor.api.auth.UserAuthenticationLayer.User
 import io.conduktor.api.core.Post
 import io.conduktor.api.db.DbSessionPool.SessionTask
-import io.conduktor.api.db.{createdAt, nonEmptyText}
+import io.conduktor.api.db.{DbSessionPool, createdAt, nonEmptyText}
 import io.conduktor.api.types.UserName
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
 import zio.interop.catz._
-import zio.{Has, Task, TaskManaged, ZIO, ZLayer}
+import zio.{Has, Task, TaskManaged, URLayer, ZIO}
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -37,37 +37,26 @@ object DbPost {
     )
 }
 
-object PostRepository {
+trait PostRepository {
+  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post]
 
-  type PostRepository = Has[PostRepository.Service]
+  def findPostByTitle(title: Post.Title): Task[Option[Post]]
 
-  trait Service {
-    def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post]
+  def deletePost(id: UUID): Task[Unit]
 
-    def findPostByTitle(title: Post.Title): Task[Option[Post]]
+  def findPostById(id: UUID): Task[Post]
 
-    def deletePost(id: UUID): Task[Unit]
+  //paginated
+  def allPosts: ZIO[Any, Throwable, List[
+    Post
+  ]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
 
-    def findPostById(id: UUID): Task[Post]
+  //TODO example with LISTEN (ex: comments ?)
+}
 
-    //paginated
-    def allPosts: ZIO[Any, Throwable, List[
-      Post
-    ]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
+final class DbPostRepository(session: TaskManaged[SessionTask]) extends PostRepository {
 
-    //TODO example with LISTEN (ex: comments ?)
-  }
-
-  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): ZIO[PostRepository, Throwable, Post] =
-    ZIO.accessM(_.get.createPost(id, title, author, content))
-
-  def deletePost(id: UUID): ZIO[PostRepository, Throwable, Unit] = ZIO.accessM(_.get.deletePost(id))
-
-  def getPostById(id: UUID): ZIO[PostRepository, Throwable, Post] = ZIO.accessM(_.get.findPostById(id))
-
-  def allPosts: ZIO[PostRepository, Throwable, List[Post]] = ZIO.accessM(_.get.allPosts)
-
-  object Fragments {
+  private object Fragments {
     val fullPostFields: Fragment[skunk.Void] = sql"id, title, author, content, published, created_at"
     val byId: Fragment[UUID]                 = sql"where id = $uuid"
     val byTitle: Fragment[NonEmptyString]    = sql"where title = $nonEmptyText"
@@ -89,34 +78,44 @@ object PostRepository {
         .gcontramap[(UUID, NonEmptyString, UserName, String)]
   }
 
-  val live: ZLayer[Has[TaskManaged[SessionTask]], Throwable, PostRepository] = ZLayer.fromService { session: TaskManaged[SessionTask] =>
-    new Service {
+  override def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post] =
+    session.use {
+      _.prepare(Fragments.postCreate).use(_.unique((id, title.value, author, content.value)))
+    }.map(DbPost.toDomain)
 
-      override def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post] =
-        session.use {
-          _.prepare(Fragments.postCreate).use(_.unique((id, title.value, author, content.value)))
-        }.map(DbPost.toDomain)
-
-      override def deletePost(id: UUID): Task[Unit] =
-        session.use {
-          _.prepare(Fragments.postDelete(Fragments.byId)).use(_.execute(id)).unit
-        }
-
-      override def findPostById(id: UUID): Task[Post] =
-        session.use {
-          _.prepare(Fragments.postQuery(Fragments.byId)).use(_.unique(id))
-        }.map(DbPost.toDomain)
-
-      // Skunk allows streaming pagination, but it requires keeping the connection opens
-      override def allPosts: Task[List[Post]] =
-        session.use { session =>
-          session.prepare(Fragments.postQuery(Fragment.empty)).use(_.stream(skunk.Void, 64).compile.toList)
-        }.map(_.map(DbPost.toDomain))
-
-      override def findPostByTitle(title: Post.Title): Task[Option[Post]] =
-        session.use { session =>
-          session.prepare(Fragments.postQuery(Fragments.byTitle)).use(_.option(title.value))
-        }.map(_.map(DbPost.toDomain))
+  override def deletePost(id: UUID): Task[Unit] =
+    session.use {
+      _.prepare(Fragments.postDelete(Fragments.byId)).use(_.execute(id)).unit
     }
-  }
+
+  override def findPostById(id: UUID): Task[Post] =
+    session.use {
+      _.prepare(Fragments.postQuery(Fragments.byId)).use(_.unique(id))
+    }.map(DbPost.toDomain)
+
+  // Skunk allows streaming pagination, but it requires keeping the connection opens
+  override def allPosts: Task[List[Post]] =
+    session.use { session =>
+      session.prepare(Fragments.postQuery(Fragment.empty)).use(_.stream(skunk.Void, 64).compile.toList)
+    }.map(_.map(DbPost.toDomain))
+
+  override def findPostByTitle(title: Post.Title): Task[Option[Post]] =
+    session.use { session =>
+      session.prepare(Fragments.postQuery(Fragments.byTitle)).use(_.option(title.value))
+    }.map(_.map(DbPost.toDomain))
+}
+
+object DbPostRepository {
+
+  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): ZIO[Has[PostRepository], Throwable, Post] =
+    ZIO.accessM(_.get.createPost(id, title, author, content))
+
+  def deletePost(id: UUID): ZIO[Has[PostRepository], Throwable, Unit] = ZIO.accessM(_.get.deletePost(id))
+
+  def getPostById(id: UUID): ZIO[Has[PostRepository], Throwable, Post] = ZIO.accessM(_.get.findPostById(id))
+
+  def allPosts: ZIO[Has[PostRepository], Throwable, List[Post]] = ZIO.accessM(_.get.allPosts)
+
+  val layer: URLayer[Has[TaskManaged[DbSessionPool.SessionTask]], Has[PostRepository]] = (new DbPostRepository(_)).toLayer
+
 }
