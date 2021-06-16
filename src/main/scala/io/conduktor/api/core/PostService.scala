@@ -5,6 +5,7 @@ import io.conduktor.api.auth.UserAuthenticationLayer.User
 import io.conduktor.api.core.Post.{Content, Title}
 import io.conduktor.api.db.repository.PostRepository.PostRepository
 import io.conduktor.api.db.repository.{DbPost, PostRepository}
+import io.estatico.newtype.macros.newtype
 import zio.{Has, Task, ZIO, ZLayer}
 
 import java.util.UUID
@@ -17,8 +18,8 @@ final case class Post(
   content: String
 )
 object Post {
-  case class Title(value: NonEmptyString)
-  case class Content(value: String)
+  @newtype case class Title(value: NonEmptyString)
+  @newtype case class Content(value: String)
 }
 
 trait PostService  {
