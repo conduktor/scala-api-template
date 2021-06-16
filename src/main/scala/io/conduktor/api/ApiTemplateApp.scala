@@ -25,7 +25,7 @@ object ApiTemplateApp extends App {
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
     program
       .provideCustomMagicLayer(
-        DbSessionPool.live,
+        DbSessionPool.layer,
         PostRepository.live,
         AuthService.live,
         AppConfig.layer.project(_.db),

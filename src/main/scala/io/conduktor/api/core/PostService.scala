@@ -4,7 +4,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.conduktor.api.auth.UserAuthenticationLayer.User
 import io.conduktor.api.core.Post.{Content, Title}
 import io.conduktor.api.db.repository.PostRepository.PostRepository
-import io.conduktor.api.db.repository.{DbPost, PostRepository}
+import io.conduktor.api.db.repository.{PostRepository}
 import io.estatico.newtype.macros.newtype
 import zio.{Has, Task, ZIO, ZLayer}
 

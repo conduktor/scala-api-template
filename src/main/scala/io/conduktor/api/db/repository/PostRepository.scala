@@ -3,13 +3,14 @@ package io.conduktor.api.db.repository
 import eu.timepit.refined.types.string.NonEmptyString
 import io.conduktor.api.auth.UserAuthenticationLayer.User
 import io.conduktor.api.core.Post
-import io.conduktor.api.db.{DbSessionPool, createdAt, nonEmptyText}
+import io.conduktor.api.db.DbSessionPool.SessionTask
+import io.conduktor.api.db.{createdAt, nonEmptyText}
 import io.conduktor.api.types.UserName
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
 import zio.interop.catz._
-import zio.{Has, Task, ZIO, ZLayer}
+import zio.{Has, Task, TaskManaged, ZIO, ZLayer}
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -88,35 +89,32 @@ object PostRepository {
         .gcontramap[(UUID, NonEmptyString, UserName, String)]
   }
 
-  val live: ZLayer[Has[DbSessionPool.Service], Throwable, PostRepository] = ZLayer.fromServiceManaged { dbService: DbSessionPool.Service =>
-    for {
-      preAllocated <- dbService.pool.preallocateManaged
-      pool         <- preAllocated
-    } yield new Service {
+  val live: ZLayer[Has[TaskManaged[SessionTask]], Throwable, PostRepository] = ZLayer.fromService { session: TaskManaged[SessionTask] =>
+    new Service {
 
       override def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post] =
-        pool.use {
+        session.use {
           _.prepare(Fragments.postCreate).use(_.unique((id, title.value, author, content.value)))
         }.map(DbPost.toDomain)
 
       override def deletePost(id: UUID): Task[Unit] =
-        pool.use {
+        session.use {
           _.prepare(Fragments.postDelete(Fragments.byId)).use(_.execute(id)).unit
         }
 
       override def findPostById(id: UUID): Task[Post] =
-        pool.use {
+        session.use {
           _.prepare(Fragments.postQuery(Fragments.byId)).use(_.unique(id))
         }.map(DbPost.toDomain)
 
       // Skunk allows streaming pagination, but it requires keeping the connection opens
       override def allPosts: Task[List[Post]] =
-        pool.use { session =>
+        session.use { session =>
           session.prepare(Fragments.postQuery(Fragment.empty)).use(_.stream(skunk.Void, 64).compile.toList)
         }.map(_.map(DbPost.toDomain))
 
       override def findPostByTitle(title: Post.Title): Task[Option[Post]] =
-        pool.use { session =>
+        session.use { session =>
           session.prepare(Fragments.postQuery(Fragments.byTitle)).use(_.option(title.value))
         }.map(_.map(DbPost.toDomain))
     }
