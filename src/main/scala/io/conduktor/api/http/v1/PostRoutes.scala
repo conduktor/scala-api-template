@@ -4,8 +4,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import io.conduktor.api.auth.UserAuthenticationLayer._
-import io.conduktor.api.core
-import io.conduktor.api.core.{Post, PostService}
+import io.conduktor.api.core.PostService
+import io.conduktor.api.core.types.Post
 import io.conduktor.api.types.UserName
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
@@ -26,7 +26,7 @@ object PostDTO {
   import io.circe.refined._
   implicit final val codec: Codec[PostDTO] = deriveCodec
 
-  def from(p: core.Post): PostDTO =
+  def from(p: Post): PostDTO =
     PostDTO(
       id = p.id,
       title = p.title,

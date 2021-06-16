@@ -2,7 +2,8 @@ package io.conduktor.api.db.repository
 
 import eu.timepit.refined.types.string.NonEmptyString
 import io.conduktor.api.auth.UserAuthenticationLayer.User
-import io.conduktor.api.core.Post
+import io.conduktor.api.core.dependencies.PostRepository
+import io.conduktor.api.core.types.Post
 import io.conduktor.api.db.DbSessionPool.SessionTask
 import io.conduktor.api.db.{DbSessionPool, createdAt, nonEmptyText}
 import io.conduktor.api.types.UserName
@@ -15,7 +16,7 @@ import zio.{Has, Task, TaskManaged, URLayer, ZIO}
 import java.time.LocalDateTime
 import java.util.UUID
 
-final case class DbPost(
+private final case class DbPost(
   id: UUID,
   title: NonEmptyString,
   author: UserName,
@@ -23,7 +24,7 @@ final case class DbPost(
   published: Boolean,
   createdAt: LocalDateTime
 )
-object DbPost {
+private object DbPost {
   private[repository] val codec: Codec[DbPost] =
     (uuid ~ nonEmptyText ~ UserName.codec ~ text ~ bool ~ createdAt).gimap[DbPost]
 
@@ -35,23 +36,6 @@ object DbPost {
       published = p.published,
       content = p.content
     )
-}
-
-trait PostRepository {
-  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post]
-
-  def findPostByTitle(title: Post.Title): Task[Option[Post]]
-
-  def deletePost(id: UUID): Task[Unit]
-
-  def findPostById(id: UUID): Task[Post]
-
-  //paginated
-  def allPosts: ZIO[Any, Throwable, List[
-    Post
-  ]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
-
-  //TODO example with LISTEN (ex: comments ?)
 }
 
 final class DbPostRepository(session: TaskManaged[SessionTask]) extends PostRepository {

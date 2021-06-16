@@ -1,25 +1,12 @@
 package io.conduktor.api.core
 
-import eu.timepit.refined.types.string.NonEmptyString
 import io.conduktor.api.auth.UserAuthenticationLayer.User
-import io.conduktor.api.core.Post.{Content, Title}
-import io.conduktor.api.db.repository.PostRepository
-import io.estatico.newtype.macros.newtype
+import io.conduktor.api.core.dependencies.PostRepository
+import io.conduktor.api.core.types.Post.{Title, Content}
+import io.conduktor.api.core.types.Post
 import zio.{Function1ToLayerSyntax, Has, Task, URLayer, ZIO}
 
 import java.util.UUID
-
-final case class Post(
-  id: UUID,
-  title: NonEmptyString,
-  author: User,
-  published: Boolean,
-  content: String
-)
-object Post {
-  @newtype case class Title(value: NonEmptyString)
-  @newtype case class Content(value: String)
-}
 
 trait PostService {
   def createPost(user: User, title: Title, content: Content): Task[Post]
