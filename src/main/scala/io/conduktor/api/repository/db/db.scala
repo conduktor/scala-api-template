@@ -1,4 +1,4 @@
-package io.conduktor.api
+package io.conduktor.api.repository
 
 import eu.timepit.refined.types.all.NonEmptyString
 import skunk.Codec
