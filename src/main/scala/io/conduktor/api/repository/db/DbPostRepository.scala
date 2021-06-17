@@ -24,7 +24,7 @@ private[db] final case class PostDb(
   createdAt: LocalDateTime
 )
 private object PostDb {
-  private[repository] val codec: Codec[PostDb] =
+  private[db] val codec: Codec[PostDb] =
     (uuid ~ nonEmptyText ~ UserName.codec ~ text ~ bool ~ createdAt).gimap[PostDb]
 
   def toDomain(p: PostDb): Post =
