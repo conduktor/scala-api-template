@@ -25,9 +25,6 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
 
   implicit val userCodec: Codec[User] = deriveCodec
 
-  // extract the header, claims and signature
-  private val jwtRegex = """(.+?)\.(.+?)\.(.+?)""".r
-
   private def validateJwt(token: String): ZIO[Clock, Throwable, JwtClaim] = for {
     jwk    <- getJwk(token) // Get the secret key for this token
     claims <-
@@ -37,8 +34,8 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
 
   private val splitToken = (jwt: String) =>
     jwt match {
-      case jwtRegex(header, body, sig) => ZIO.succeed((header, body, sig))
-      case _                           => ZIO.fail(new Exception("Token does not match the correct pattern"))
+      case s"$header.$body.$sig" => ZIO.succeed((header, body, sig))
+      case _                     => ZIO.fail(new Exception("Token does not match the correct pattern"))
     }
 
   private val decodeElements = (data: Task[(String, String, String)]) =>
@@ -96,4 +93,3 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
 object JwtAuthService {
   val layer: URLayer[Has[Auth0Config] with Clock, Has[AuthService]] = (new JwtAuthService(_, _)).toLayer
 }
-
