@@ -2,6 +2,7 @@ package io.conduktor.api.config
 
 import zio.config._
 import ConfigDescriptor._
+import com.auth0.jwk.UrlJwkProvider
 import zio.{Has, ZLayer, system}
 
 final case class AppConfig(db: DBConfig, auth0: Auth0Config)
@@ -15,7 +16,10 @@ final case class DBConfig(
   gcpInstance: Option[String],
   ssl: Boolean = false
 )
-final case class Auth0Config(domain: String, audience: Option[String])
+final case class Auth0Config(domain: String, audience: Option[String]) {
+  val issuer = s"https://$domain"
+  val jwkProvider = new UrlJwkProvider(issuer)
+}
 
 object AppConfig {
 
