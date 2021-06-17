@@ -3,7 +3,7 @@ package io.conduktor.api.http.v1
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
-import io.conduktor.api.auth.UserAuthenticationLayer._
+import io.conduktor.api.auth.{AuthService, User}
 import io.conduktor.api.model.Post
 import io.conduktor.api.service.PostService
 import io.conduktor.api.types.UserName
@@ -44,7 +44,7 @@ object CreatePostInput {
 
 object PostRoutes {
 
-  type Env = AuthService with Has[PostService]
+  type Env = Has[AuthService] with Has[PostService]
 
   private def serverError(defaultMessage: => String)(error: Throwable): ServerError =
     ServerError(Option(error.getMessage).getOrElse(defaultMessage))

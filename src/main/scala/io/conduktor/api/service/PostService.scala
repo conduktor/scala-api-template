@@ -1,6 +1,6 @@
 package io.conduktor.api.service
 
-import io.conduktor.api.auth.UserAuthenticationLayer.User
+import io.conduktor.api.auth.User
 import io.conduktor.api.model.Post
 import io.conduktor.api.model.Post.{Content, Title}
 import io.conduktor.api.repository.PostRepository

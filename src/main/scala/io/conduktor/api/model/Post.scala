@@ -1,7 +1,7 @@
 package io.conduktor.api.model
 
 import eu.timepit.refined.types.string.NonEmptyString
-import io.conduktor.api.auth.UserAuthenticationLayer.User
+import io.conduktor.api.auth.User
 import io.estatico.newtype.macros.newtype
 
 import java.util.UUID

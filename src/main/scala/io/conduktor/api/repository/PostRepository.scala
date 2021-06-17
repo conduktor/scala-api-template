@@ -2,7 +2,7 @@ package io.conduktor.api.repository
 
 import io.conduktor.api.model.Post
 import io.conduktor.api.types.UserName
-import zio.{Task, ZIO}
+import zio.{Has, Task, ZIO}
 
 import java.util.UUID
 
@@ -21,4 +21,15 @@ trait PostRepository {
   ]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
 
   //TODO example with LISTEN (ex: comments ?)
+}
+
+object PostRepository {
+  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): ZIO[Has[PostRepository], Throwable, Post] =
+    ZIO.accessM(_.get.createPost(id, title, author, content))
+
+  def deletePost(id: UUID): ZIO[Has[PostRepository], Throwable, Unit] = ZIO.accessM(_.get.deletePost(id))
+
+  def getPostById(id: UUID): ZIO[Has[PostRepository], Throwable, Post] = ZIO.accessM(_.get.findPostById(id))
+
+  def allPosts: ZIO[Has[PostRepository], Throwable, List[Post]] = ZIO.accessM(_.get.allPosts)
 }

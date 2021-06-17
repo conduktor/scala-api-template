@@ -1,11 +1,12 @@
 package io.conduktor.api.http
 
-import io.conduktor.api.auth.UserAuthenticationLayer._
+import io.conduktor.api.auth._
 import sttp.model.StatusCode
 import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.ztapir._
+import zio.Has
 
 package object v1 {
 
@@ -20,7 +21,7 @@ package object v1 {
       )
     )
 
-  val secureEndpoint: ZPartialServerEndpoint[AuthService, User, Unit, ErrorInfo, Unit] =
+  val secureEndpoint: ZPartialServerEndpoint[Has[AuthService], User, Unit, ErrorInfo, Unit] =
     baseEndpoint
       .in(header[String]("Authorization")) // TODO that return 400 if no auth header
       .zServerLogicForCurrent(AuthService.auth(_).orElseFail(Unauthorized))

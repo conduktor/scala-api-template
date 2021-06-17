@@ -1,6 +1,6 @@
 package io.conduktor.api
 
-import io.conduktor.api.auth.UserAuthenticationLayer.AuthService
+import io.conduktor.api.auth.JwtAuthService
 import io.conduktor.api.config.AppConfig
 import io.conduktor.api.http.Server
 import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
@@ -26,7 +26,7 @@ object ApiTemplateApp extends App {
       .provideCustomMagicLayer(
         DbSessionPool.layer,
         DbPostRepository.layer,
-        AuthService.live,
+        JwtAuthService.layer,
         AppConfig.layer.project(_.db),
         AppConfig.layer.project(_.auth0),
         logLayerLive,

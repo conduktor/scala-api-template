@@ -1,17 +1,16 @@
 package io.conduktor.api.repository.db
 
 import eu.timepit.refined.types.string.NonEmptyString
-import io.conduktor.api.auth.UserAuthenticationLayer.User
-import DbSessionPool.SessionTask
-import io.conduktor.api.repository.db.{createdAt, nonEmptyText}
+import io.conduktor.api.auth.User
 import io.conduktor.api.model.Post
 import io.conduktor.api.repository.PostRepository
+import io.conduktor.api.repository.db.DbSessionPool.SessionTask
 import io.conduktor.api.types.UserName
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
 import zio.interop.catz._
-import zio.{Has, Task, TaskManaged, URLayer, ZIO}
+import zio.{Has, Task, TaskManaged, URLayer}
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -90,15 +89,6 @@ final class DbPostRepository(session: TaskManaged[SessionTask]) extends PostRepo
 }
 
 object DbPostRepository {
-
-  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): ZIO[Has[PostRepository], Throwable, Post] =
-    ZIO.accessM(_.get.createPost(id, title, author, content))
-
-  def deletePost(id: UUID): ZIO[Has[PostRepository], Throwable, Unit] = ZIO.accessM(_.get.deletePost(id))
-
-  def getPostById(id: UUID): ZIO[Has[PostRepository], Throwable, Post] = ZIO.accessM(_.get.findPostById(id))
-
-  def allPosts: ZIO[Has[PostRepository], Throwable, List[Post]] = ZIO.accessM(_.get.allPosts)
 
   val layer: URLayer[Has[TaskManaged[DbSessionPool.SessionTask]], Has[PostRepository]] = (new DbPostRepository(_)).toLayer
 
