@@ -43,7 +43,6 @@ object Main extends App {
         DbPostRepository.layer,
         AppConfig.layer.project(_.db),
         AppConfig.layer.project(_.auth0),
-        JwtAuthService.jwkLayer,
         JwtAuthService.layer,
         logLayerLive,
         PostServiceLive.layer

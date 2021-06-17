@@ -53,15 +53,13 @@ final class JwtAuthService(jwk: Jwk, auth0Config: Auth0Config, clock: java.time.
 
 object JwtAuthService {
 
-  /**
-   * I didn't find how to combine these two layers.
-   *
-   * Ideally, I'd prefer to expose only `layer` 🤷‍♂️
-   */
-  val jwkLayer: ZLayer[Has[Auth0Config], Throwable, Has[Jwk]] =
+  private val jwkLayer: ZLayer[Has[Auth0Config], Throwable, Has[Jwk]] =
     ZIO.accessM[Has[Auth0Config]](c => AuthService.jwk(c.get)).toLayer
 
-  val layer: URLayer[Has[Jwk] with Has[Auth0Config] with Has[java.time.Clock], Has[AuthService]] =
+  private val serviceLayer: URLayer[Has[Jwk] with Has[Auth0Config] with Has[java.time.Clock], Has[AuthService]] =
     (new JwtAuthService(_, _, _)).toLayer
+
+  val layer: ZLayer[Has[Auth0Config] with Has[java.time.Clock], Throwable, Has[AuthService]] =
+    (ZLayer.identity[Has[Auth0Config]] ++ ZLayer.identity[Has[java.time.Clock]] ++ jwkLayer) >>> serviceLayer
 
 }
