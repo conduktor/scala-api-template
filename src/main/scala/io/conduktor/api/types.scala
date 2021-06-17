@@ -1,6 +1,7 @@
 package io.conduktor.api
 
 import eu.timepit.refined.types.all.NonEmptyString
+import io.conduktor.api.repository.db
 import io.estatico.newtype.macros.newtype
 
 object types {

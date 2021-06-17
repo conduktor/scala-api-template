@@ -4,8 +4,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import io.conduktor.api.auth.UserAuthenticationLayer._
-import io.conduktor.api.core.PostService
-import io.conduktor.api.core.types.Post
+import io.conduktor.api.model.Post
+import io.conduktor.api.service.PostService
 import io.conduktor.api.types.UserName
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._

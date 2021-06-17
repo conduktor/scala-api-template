@@ -2,10 +2,9 @@ package io.conduktor.api
 
 import io.conduktor.api.auth.UserAuthenticationLayer.AuthService
 import io.conduktor.api.config.AppConfig
-import io.conduktor.api.core.PostServiceLive
-import io.conduktor.api.db.DbSessionPool
-import io.conduktor.api.db.repository.DbPostRepository
 import io.conduktor.api.http.Server
+import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
+import io.conduktor.api.service.PostServiceLive
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
 import zio.magic.ZioProvideMagicOps

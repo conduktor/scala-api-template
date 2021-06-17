@@ -1,9 +1,9 @@
-package io.conduktor.api.core
+package io.conduktor.api.service
 
 import io.conduktor.api.auth.UserAuthenticationLayer.User
-import io.conduktor.api.core.dependencies.PostRepository
-import io.conduktor.api.core.types.Post.{Title, Content}
-import io.conduktor.api.core.types.Post
+import io.conduktor.api.model.Post
+import io.conduktor.api.model.Post.{Content, Title}
+import io.conduktor.api.repository.PostRepository
 import zio.{Function1ToLayerSyntax, Has, Task, URLayer, ZIO}
 
 import java.util.UUID

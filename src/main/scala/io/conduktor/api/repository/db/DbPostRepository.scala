@@ -1,11 +1,11 @@
-package io.conduktor.api.db.repository
+package io.conduktor.api.repository.db
 
 import eu.timepit.refined.types.string.NonEmptyString
 import io.conduktor.api.auth.UserAuthenticationLayer.User
-import io.conduktor.api.core.dependencies.PostRepository
-import io.conduktor.api.core.types.Post
-import io.conduktor.api.db.DbSessionPool.SessionTask
-import io.conduktor.api.db.{DbSessionPool, createdAt, nonEmptyText}
+import DbSessionPool.SessionTask
+import io.conduktor.api.repository.db.{createdAt, nonEmptyText}
+import io.conduktor.api.model.Post
+import io.conduktor.api.repository.PostRepository
 import io.conduktor.api.types.UserName
 import skunk.codec.all._
 import skunk.implicits._

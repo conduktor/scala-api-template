@@ -1,6 +1,6 @@
-package io.conduktor.api.core.dependencies
+package io.conduktor.api.repository
 
-import io.conduktor.api.core.types.Post
+import io.conduktor.api.model.Post
 import io.conduktor.api.types.UserName
 import zio.{Task, ZIO}
 
