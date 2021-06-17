@@ -1,0 +1,9 @@
+P = In progress
+X = Done
+
+[X] des tests repository sur le trait + execution sur db
+[X] une implem memory du repository + faire tourner les tests dessus
+[ ] un test unitaire du code domain
+[ ] un test d'API avec un stub du core domain
+[ ] un test d'API avec implem memory
+[ ] un test e2e avec implem db

@@ -29,10 +29,10 @@ object PostDTO {
   def from(p: Post): PostDTO =
     PostDTO(
       id = p.id,
-      title = p.title,
+      title = p.title.value,
       author = p.author.name,
       published = p.published,
-      content = p.content
+      content = p.content.value
     )
 }
 

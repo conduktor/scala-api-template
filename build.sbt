@@ -90,7 +90,7 @@ val dependencies =
     Seq(
       "io.estatico" %% "newtype" % "0.4.4",
       "eu.timepit"  %% "refined" % "0.9.26"
-    )
+    ) ++ dbTestingStack
 
 lazy val dockerSettings = Seq(
   Docker / maintainer := "Conduktor LLC <support@conduktor.io>",
