@@ -1,3 +1,4 @@
+import io.conduktor.api.repository.db.DbSessionPool
 import io.conduktor.api.repository.db.DbSessionPool.SessionTask
 import skunk._
 import skunk.implicits.toStringOps
@@ -21,7 +22,7 @@ object DbSpec extends DefaultRunnableSpec {
                 }
       } yield (
         assert(res)(equalTo(1))
-      )).provideCustomMagicLayer(BootstrapPostgres.dbLayer)
+      )).provideCustomMagicLayer(DbSessionPool.layer, BootstrapPostgres.pgLayer)
     }
   )
 

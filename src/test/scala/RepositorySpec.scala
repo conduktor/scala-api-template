@@ -2,7 +2,7 @@ import eu.timepit.refined.auto._
 import io.conduktor.api.auth.User
 import io.conduktor.api.model.Post
 import io.conduktor.api.repository.PostRepository
-import io.conduktor.api.repository.db.DbPostRepository
+import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
 import io.conduktor.api.repository.db.DbSessionPool.SessionTask
 import io.conduktor.api.types.UserName
 import skunk.implicits.toStringOps
@@ -30,7 +30,7 @@ PRIMARY KEY ("id")
 )""".command)
     }
 
-  val repoLayer = (BootstrapPostgres.dbLayer.tap(initTables) >>> DbPostRepository.layer).orDie
+  val repoLayer = (BootstrapPostgres.pgLayer >>> DbSessionPool.layer.tap(initTables) >>> DbPostRepository.layer).orDie
 
   override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "database").provideCustomLayer(repoLayer)
 

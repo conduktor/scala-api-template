@@ -1,6 +1,5 @@
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import io.conduktor.api.config.DBConfig
-import io.conduktor.api.repository.db.DbSessionPool
 import zio._
 
 object BootstrapPostgres {
@@ -18,5 +17,4 @@ object BootstrapPostgres {
     )
   })
 
-  val dbLayer = pgLayer >>> DbSessionPool.layer
 }
