@@ -1,56 +1,46 @@
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import eu.timepit.refined.auto._
 import io.conduktor.api.auth.User
-import io.conduktor.api.config.DBConfig
 import io.conduktor.api.model.Post
 import io.conduktor.api.repository.PostRepository
-import io.conduktor.api.repository.db.DbSessionPool.SessionTask
-import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
 import io.conduktor.api.types.UserName
-import skunk.implicits.toStringOps
 import zio.test.Assertion.equalTo
-import zio.test.{DefaultRunnableSpec, ZSpec, assert}
-import zio.{Has, Task, TaskManaged, ZIO, ZLayer}
+import zio.ZIO
+import io.conduktor.api.repository.db.DbSessionPool.SessionTask
+import zio.{Has, TaskManaged}
+import zio.ZLayer
+import io.conduktor.api.repository.db.DbPostRepository
+import zio.test.ZSpec
+import zio.Task
+import skunk.implicits.toStringOps
+import zio.test.environment.TestEnvironment
 
 import java.util.UUID
+import zio.test._
+import zio.test.environment._
 
 object DbRepositorySpec extends RepositorySpec {
 
-  val pg       = EmbeddedPostgres.builder().start()
-  val dbConfig = DBConfig(
-    user = "postgres",
-    password = None,
-    host = "localhost",
-    port = pg.getPort,
-    database = "postgres",
-    maxPoolSize = 5,
-    gcpInstance = None,
-    ssl = false
-  )
-
-  val dbLayer = ZLayer.succeed(dbConfig) >>> DbSessionPool.layer
-  val repository = dbLayer.tap(initTables) >>> DbPostRepository.layer
-
-  private def initTables(x: Has[TaskManaged[SessionTask]]) = {
-    for {
-      _ <- x.get.use {
-
-        session =>
-          session.execute(
-            sql"""
+  private def initTables(x: Has[TaskManaged[SessionTask]]) =
+    x.get.use { session =>
+      session.execute(sql"""
 CREATE TABLE "post" (
-    "id" UUID NOT NULL,
-    "title" TEXT NOT NULL,
-    "published" BOOLEAN NOT NULL DEFAULT false,
-    "author" TEXT NOT NULL,
-    "content" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+"id" UUID NOT NULL,
+"title" TEXT NOT NULL,
+"published" BOOLEAN NOT NULL DEFAULT false,
+"author" TEXT NOT NULL,
+"content" TEXT NOT NULL,
+"created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    PRIMARY KEY ("id")
+PRIMARY KEY ("id")
 )""".command)
-      }
-    } yield ()
-  }
+    }
+
+  override def repositoryType: String = "database"
+
+  val repoLayer = (BootstrapPostgres.dbLayer.tap(initTables) >>> DbPostRepository.layer).orDie
+
+  override def testLayer: zio.Layer[Nothing, Environment] = testEnvironment ++ repoLayer
+
 }
 
 object MemoryRepositorySpec extends RepositorySpec {
@@ -88,21 +78,22 @@ object MemoryRepositorySpec extends RepositorySpec {
     }
   }
 
-  val repository = ZLayer.succeed(new InMemoryPostRepository)
+  override def repositoryType: String = "memory"
 
+  override def testLayer: zio.Layer[Nothing, Environment] = testEnvironment ++ ZLayer.succeed[PostRepository](new InMemoryPostRepository)
 }
 
-trait RepositorySpec extends DefaultRunnableSpec {
+abstract class RepositorySpec extends ApiSpec[TestEnvironment with Has[PostRepository]] {
 
-  def repository: ZLayer[zio.ZEnv, Throwable, Has[PostRepository]]
+  def repositoryType: String
 
-  override def spec: ZSpec[zio.test.environment.TestEnvironment, Any] =
-    suite("test the behavior of the repository")(
-      testM("a created post can be retrieved by id") {
+  def spec: ZSpec[Environment, Any] =
+    suite(s"test the behavior of the repository $repositoryType")(
+      testM(s"a created post can be retrieved by id") {
         //FIXME: inject database schema properly
         //FIXME: extract uuid into a zlayer
         val id = UUID.fromString("08d7d61d-7e69-44b7-b66e-4203c192ff82")
-        (for {
+        for {
           repo   <- ZIO.service[PostRepository]
           _      <- repo.createPost(
                       id = id,
@@ -115,7 +106,7 @@ trait RepositorySpec extends DefaultRunnableSpec {
           equalTo(
             Post(id = id, title = Post.Title("hello"), author = User(UserName("bob")), published = false, content = Post.Content("testing"))
           )
-        )).provideCustomLayer(repository)
+        )
       }
     )
 }
