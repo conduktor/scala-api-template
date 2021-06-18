@@ -2,23 +2,18 @@ import eu.timepit.refined.auto._
 import io.conduktor.api.auth.User
 import io.conduktor.api.model.Post
 import io.conduktor.api.repository.PostRepository
-import io.conduktor.api.types.UserName
-import zio.test.Assertion.equalTo
-import zio.ZIO
-import io.conduktor.api.repository.db.DbSessionPool.SessionTask
-import zio.{Has, TaskManaged}
-import zio.ZLayer
 import io.conduktor.api.repository.db.DbPostRepository
-import zio.test.ZSpec
-import zio.Task
+import io.conduktor.api.repository.db.DbSessionPool.SessionTask
+import io.conduktor.api.types.UserName
 import skunk.implicits.toStringOps
+import zio.test.Assertion.equalTo
+import zio.test.{ZSpec, _}
 import zio.test.environment.TestEnvironment
+import zio.{Has, Task, TaskManaged, ULayer, ZIO, ZLayer}
 
 import java.util.UUID
-import zio.test._
-import zio.test.environment._
 
-object DbRepositorySpec extends RepositorySpec {
+object DbRepositorySpec extends DefaultRunnableSpec {
 
   private def initTables(x: Has[TaskManaged[SessionTask]]) =
     x.get.use { session =>
@@ -35,15 +30,13 @@ PRIMARY KEY ("id")
 )""".command)
     }
 
-  override def repositoryType: String = "database"
-
   val repoLayer = (BootstrapPostgres.dbLayer.tap(initTables) >>> DbPostRepository.layer).orDie
 
-  override def testLayer: zio.Layer[Nothing, Environment] = testEnvironment ++ repoLayer
+  override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "database").provideCustomLayer(repoLayer)
 
 }
 
-object MemoryRepositorySpec extends RepositorySpec {
+object MemoryRepositorySpec extends DefaultRunnableSpec {
 
   class InMemoryPostRepository extends PostRepository {
 
@@ -78,16 +71,15 @@ object MemoryRepositorySpec extends RepositorySpec {
     }
   }
 
-  override def repositoryType: String = "memory"
+  val testLayer: ULayer[Has[PostRepository]] = ZLayer.succeed[PostRepository](new InMemoryPostRepository)
 
-  override def testLayer: zio.Layer[Nothing, Environment] = testEnvironment ++ ZLayer.succeed[PostRepository](new InMemoryPostRepository)
+  override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "memory").provideCustomLayer(testLayer)
+
 }
 
-abstract class RepositorySpec extends ApiSpec[TestEnvironment with Has[PostRepository]] {
+object RepositorySpec {
 
-  def repositoryType: String
-
-  def spec: ZSpec[Environment, Any] =
+  def spec(repositoryType: String): ZSpec[TestEnvironment with Has[PostRepository], Any] =
     suite(s"test the behavior of the repository $repositoryType")(
       testM(s"a created post can be retrieved by id") {
         //FIXME: inject database schema properly
