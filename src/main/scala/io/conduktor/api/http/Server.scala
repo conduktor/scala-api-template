@@ -12,7 +12,7 @@ import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.clock.Clock
 import zio.interop.catz._
-import zio.{RIO, ZEnv, ZIO}
+import zio.{Has, RIO, ZLayer, ZManaged, system}
 
 import scala.concurrent.duration._
 
@@ -30,6 +30,8 @@ object RoutesInterpreter {
 
 object Server {
 
+  type Server = org.http4s.server.Server[RIO[PostRoutes.Env with Clock, *]]
+
   private lazy val yaml: String = {
     import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
     import sttp.tapir.openapi.circe.yaml._
@@ -42,18 +44,21 @@ object Server {
   val methodConfig: CORSConfig = CORSConfig(anyOrigin = true, anyMethod = true, allowCredentials = true, maxAge = 1.day.toSeconds)
 
   // Starting the server
-  val serve: ZIO[ZEnv with PostRoutes.Env, Throwable, Unit] =
-    ZIO.runtime[ZEnv with PostRoutes.Env].flatMap {
+  private val serve: ZManaged[system.System with Clock with PostRoutes.Env, Throwable, Server] =
+    ZManaged.runtime[system.System with Clock with PostRoutes.Env].flatMap {
       implicit runtime => // This is needed to derive cats-effect instances for that are needed by http4s
         for {
-          port   <- zio.system.env("PORT").map(_.flatMap(_.toIntOption).getOrElse(8080))
+        //FIXME: how do you combine ZManaged and reading the env?
+          //port   <- zio.system.env("PORT").map(_.flatMap(_.toIntOption).getOrElse(8080))
           server <-
             BlazeServerBuilder[RIO[PostRoutes.Env with Clock, *]](runtime.platform.executor.asEC)
-              .bindHttp(port, "0.0.0.0")
+            //put back the right port
+              .bindHttp(0, "0.0.0.0")
               .withHttpApp(CORS(Router("/v1" -> (RoutesInterpreter.routes <+> new SwaggerHttp4s(yaml).routes)).orNotFound, methodConfig))
-              .serve
-              .compile
-              .drain
+              .resource
+              .toManaged
         } yield server
     }
+
+  val layer: ZLayer[system.System with Clock with PostRoutes.Env, Throwable, Has[Server]] = serve.toLayer
 }

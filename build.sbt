@@ -43,8 +43,8 @@ val httpDependencies = Seq(
   "com.softwaremill.sttp.tapir"   %% "tapir-zio"               % tapirVersion,
   "com.softwaremill.sttp.tapir"   %% "tapir-zio-http4s-server" % tapirVersion,
   "com.softwaremill.sttp.tapir"   %% "tapir-refined"           % tapirVersion,
-  "com.softwaremill.sttp.client3" %% "core"                    % "3.3.7" % Test,
-  "com.softwaremill.sttp.client3" %% "httpclient-backend-zio"  % "3.3.7" % Test
+  "com.softwaremill.sttp.client3" %% "core"                    % "3.3.7", //FIXME: when in Test scope, there's a conflict on sttp model version
+  "com.softwaremill.sttp.client3" %% "httpclient-backend-zio"  % "3.3.7"
 )
 
 val jwtDependencies = Seq(

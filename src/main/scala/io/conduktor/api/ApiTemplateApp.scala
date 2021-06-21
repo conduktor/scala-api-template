@@ -3,6 +3,7 @@ package io.conduktor.api
 import io.conduktor.api.auth.JwtAuthService
 import io.conduktor.api.config.AppConfig
 import io.conduktor.api.http.Server
+import io.conduktor.api.http.Server.Server
 import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
 import io.conduktor.api.service.PostServiceLive
 import zio.logging._
@@ -24,6 +25,7 @@ object ApiTemplateApp extends App {
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
     program
       .provideCustomMagicLayer(
+        Server.layer,
         DbSessionPool.layer,
         DbPostRepository.layer,
         JwtAuthService.layer,
@@ -37,6 +39,6 @@ object ApiTemplateApp extends App {
 
   private val program =
     for {
-      _ <- Server.serve
+      _ <- ZIO.service[Server]
     } yield ()
 }
