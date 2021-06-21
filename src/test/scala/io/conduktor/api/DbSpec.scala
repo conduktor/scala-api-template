@@ -1,11 +1,14 @@
+package io.conduktor.api
+
+import io.conduktor.api.repository.db.DbSessionPool
 import io.conduktor.api.repository.db.DbSessionPool.SessionTask
-import skunk._
+import skunk.codec.all.int4
 import skunk.implicits.toStringOps
-import zio._
+import skunk.{Query, Void}
+import zio.test.Assertion.equalTo
+import zio.test.{DefaultRunnableSpec, assert}
 import zio.magic._
-import zio.test._
-import zio.test.Assertion._
-import skunk.codec.all._
+import zio.{TaskManaged, ZIO}
 
 object DbSpec extends DefaultRunnableSpec {
 
@@ -21,7 +24,7 @@ object DbSpec extends DefaultRunnableSpec {
                 }
       } yield (
         assert(res)(equalTo(1))
-      )).provideCustomMagicLayer(BootstrapPostgres.dbLayer)
+      )).provideCustomMagicLayer(DbSessionPool.layer, BootstrapPostgres.pgLayer)
     }
   )
 

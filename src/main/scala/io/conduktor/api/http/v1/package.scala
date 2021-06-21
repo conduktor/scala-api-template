@@ -17,6 +17,7 @@ package object v1 {
         statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
         statusMapping(StatusCode.Unauthorized, emptyOutput.map(_ => Unauthorized)(_ => ())),
         statusMapping(StatusCode.NoContent, emptyOutput.map(_ => NoContent)(_ => ())),
+        statusMapping(StatusCode.Conflict, jsonBody[Conflict].description("conflict")),
         statusDefaultMapping(jsonBody[ServerError].description("unknown"))
       )
     )
