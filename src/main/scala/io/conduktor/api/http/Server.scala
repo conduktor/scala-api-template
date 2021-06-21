@@ -1,18 +1,32 @@
-package io.conduktor.api.server
-
-import scala.concurrent.duration._
+package io.conduktor.api.http
 
 import cats.syntax.all._
-import io.conduktor.api.server.endpoints.PostRoutes
+import io.conduktor.api.http.v1.PostRoutes
+import org.http4s.HttpRoutes
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware._
 import org.http4s.syntax.kleisli._
+import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
-
+import sttp.tapir.ztapir._
 import zio.clock.Clock
 import zio.interop.catz._
 import zio.{RIO, ZEnv, ZIO}
+
+import scala.concurrent.duration._
+
+/*
+  Interpret Tapir endpoints as Http4s routes
+ */
+object RoutesInterpreter {
+  val routes: HttpRoutes[RIO[PostRoutes.Env with Clock, *]] =
+    ZHttp4sServerInterpreter
+      .from(
+        PostRoutes.Endpoints.all.map(_.widen[PostRoutes.Env])
+      )
+      .toRoutes
+}
 
 object Server {
 
@@ -36,7 +50,7 @@ object Server {
           server <-
             BlazeServerBuilder[RIO[PostRoutes.Env with Clock, *]](runtime.platform.executor.asEC)
               .bindHttp(port, "0.0.0.0")
-              .withHttpApp(CORS(Router("/" -> (RoutesInterpreter.routes <+> new SwaggerHttp4s(yaml).routes)).orNotFound, methodConfig))
+              .withHttpApp(CORS(Router("/v1" -> (RoutesInterpreter.routes <+> new SwaggerHttp4s(yaml).routes)).orNotFound, methodConfig))
               .serve
               .compile
               .drain

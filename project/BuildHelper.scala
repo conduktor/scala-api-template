@@ -13,6 +13,7 @@ object BuildHelper {
     name := s"$prjName",
     (ThisBuild / scalaVersion) := Scala213,
     libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     semanticdbEnabled := true,
     semanticdbOptions += "-P:semanticdb:synthetics:on",
     semanticdbVersion := scalafixSemanticdb.revision, // use Scalafix compatible version
@@ -26,7 +27,7 @@ object BuildHelper {
     autoAPIMappings := true
   )
 
-  implicit class ModuleHelper(p: Project) {
+  implicit final class ModuleHelper(private val p: Project) extends AnyVal {
     def module: Project = p.in(file(p.id)).settings(stdSettings(p.id))
   }
 }

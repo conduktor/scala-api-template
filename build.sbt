@@ -19,9 +19,9 @@ addCommandAlias("updates", ";dependencyUpdates; reload plugins; dependencyUpdate
 
 val upx = "UPX_COMPRESSION"
 
-val zioVersion       = "1.0.5"
-val zioConfigVersion = "1.0.1"
-val tapirVersion     = "0.17.18"
+val zioVersion       = "1.0.9"
+val zioConfigVersion = "1.0.6"
+val tapirVersion     = "0.17.19"
 val http4sVersion    = "0.21.20"
 val circeVersion     = "0.13.0"
 
@@ -41,7 +41,8 @@ val httpDependencies = Seq(
   "org.http4s"                  %% "http4s-blaze-server"     % http4sVersion,
   "org.http4s"                  %% "http4s-circe"            % http4sVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-zio"               % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion
 )
 
 val jwtDependencies = Seq(
@@ -52,13 +53,13 @@ val jwtDependencies = Seq(
 val jsonDependencies = Seq(
   "io.circe"                    %% "circe-core"       % circeVersion,
   "io.circe"                    %% "circe-generic"    % circeVersion,
-  "io.circe"                    %% "circe-shapes"     % circeVersion,
   "io.circe"                    %% "circe-parser"     % circeVersion,
+  "io.circe"                    %% "circe-refined"    % circeVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion
 )
 
 val loggingDependencies = Seq(
-  "dev.zio" %% "zio-logging-slf4j" % "0.5.8",
+  "dev.zio"         %% "zio-logging-slf4j"            % "0.5.8",
   "com.google.cloud" % "google-cloud-logging-logback" % "0.120.2-alpha"
 )
 
@@ -78,7 +79,18 @@ val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.3"
 val dbTestingStack   = Seq(embeddedPostgres)
 
 val dependencies =
-  effectDependencies ++ dbDependencies ++ httpDependencies ++ jsonDependencies ++ loggingDependencies ++ configDependencies ++ apiDocsDependencies ++ jwtDependencies
+  effectDependencies ++
+    dbDependencies ++
+    httpDependencies ++
+    jsonDependencies ++
+    loggingDependencies ++
+    configDependencies ++
+    apiDocsDependencies ++
+    jwtDependencies ++
+    Seq(
+      "io.estatico" %% "newtype" % "0.4.4",
+      "eu.timepit"  %% "refined" % "0.9.26"
+    ) ++ dbTestingStack
 
 lazy val dockerSettings = Seq(
   Docker / maintainer := "Conduktor LLC <support@conduktor.io>",
@@ -108,7 +120,8 @@ lazy val root = project
     buildInfoPackage := "io.conduktor",
     buildInfoObject := "BuildInfo",
     libraryDependencies ++= dependencies,
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    scalacOptions += "-Ymacro-annotations"
   )
 
 def dockerImageTag: String = {
