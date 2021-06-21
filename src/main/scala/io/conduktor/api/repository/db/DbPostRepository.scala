@@ -30,10 +30,10 @@ private object PostDb {
   def toDomain(p: PostDb): Post =
     Post(
       id = p.id,
-      title = p.title,
+      title = Post.Title(p.title),
       author = User(name = p.author),
       published = p.published,
-      content = p.content
+      content = Post.Content(p.content)
     )
 }
 
