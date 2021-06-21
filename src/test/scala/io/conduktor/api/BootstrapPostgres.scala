@@ -1,6 +1,8 @@
+package io.conduktor.api
+
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import io.conduktor.api.config.DBConfig
-import zio._
+import zio.{Task, ZLayer, ZManaged}
 
 object BootstrapPostgres {
 

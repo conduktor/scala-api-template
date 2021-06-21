@@ -6,6 +6,7 @@ import io.circe.generic.semiauto.deriveCodec
 import io.conduktor.api.auth.{AuthService, User}
 import io.conduktor.api.model.Post
 import io.conduktor.api.service.PostService
+import io.conduktor.api.service.PostService.CreatePostError
 import io.conduktor.api.types.UserName
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
@@ -52,7 +53,7 @@ object PostRoutes {
   private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[Has[PostService], ErrorInfo, PostDTO] =
     ZIO
       .accessM[Has[PostService]](_.get.createPost(user, Post.Title(post.title), Post.Content(post.content)))
-      .bimap(serverError("Error creating post"), PostDTO.from)
+      .bimap(handleCreatePostError, PostDTO.from)
 
   private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ServerError, Unit] =
     ZIO
@@ -68,6 +69,14 @@ object PostRoutes {
     ZIO
       .accessM[Has[PostService]](_.get.all)
       .bimap(serverError("Error listing posts"), _.map(PostDTO.from))
+
+  private def handleCreatePostError(error: CreatePostError): ErrorInfo = {
+    import cats.syntax.show._
+    error match {
+      case PostService.DuplicatePostError(title) => Conflict(show"A post already exists with the same title : $title.")
+      case PostService.TechnicalPostError(err) => serverError("FATAL ERROR")(err)
+    }
+  }
 
   object Endpoints {
 

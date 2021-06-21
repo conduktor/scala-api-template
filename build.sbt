@@ -37,12 +37,14 @@ val dbDependencies = Seq(
 )
 
 val httpDependencies = Seq(
-  "org.http4s"                  %% "http4s-dsl"              % http4sVersion,
-  "org.http4s"                  %% "http4s-blaze-server"     % http4sVersion,
-  "org.http4s"                  %% "http4s-circe"            % http4sVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio"               % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion
+  "org.http4s"                    %% "http4s-dsl"              % http4sVersion,
+  "org.http4s"                    %% "http4s-blaze-server"     % http4sVersion,
+  "org.http4s"                    %% "http4s-circe"            % http4sVersion,
+  "com.softwaremill.sttp.tapir"   %% "tapir-zio"               % tapirVersion,
+  "com.softwaremill.sttp.tapir"   %% "tapir-zio-http4s-server" % tapirVersion,
+  "com.softwaremill.sttp.tapir"   %% "tapir-refined"           % tapirVersion,
+  "com.softwaremill.sttp.client3" %% "core"                    % "3.3.7" % Test,
+  "com.softwaremill.sttp.client3" %% "httpclient-backend-zio"  % "3.3.7" % Test
 )
 
 val jwtDependencies = Seq(
@@ -88,8 +90,9 @@ val dependencies =
     apiDocsDependencies ++
     jwtDependencies ++
     Seq(
-      "io.estatico" %% "newtype" % "0.4.4",
-      "eu.timepit"  %% "refined" % "0.9.26"
+      "io.estatico" %% "newtype"      % "0.4.4",
+      "eu.timepit"  %% "refined"      % "0.9.26",
+      "eu.timepit"  %% "refined-cats" % "0.9.26"
     ) ++ dbTestingStack
 
 lazy val dockerSettings = Seq(
