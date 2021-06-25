@@ -4,7 +4,7 @@ import zio.config._
 import ConfigDescriptor._
 import zio.{Has, ZLayer, system}
 
-final case class AppConfig(db: DBConfig, auth0: Auth0Config)
+final case class AppConfig(db: DBConfig, auth0: Auth0Config, http: HttpConfig)
 final case class DBConfig(
   user: String,
   password: Option[String],
@@ -16,6 +16,8 @@ final case class DBConfig(
   ssl: Boolean = false
 )
 final case class Auth0Config(domain: String, audience: Option[String])
+
+final case class HttpConfig(port: Int)
 
 object AppConfig {
 
@@ -38,8 +40,9 @@ object AppConfig {
         string("AUTH0_AUDIENCE").optional
     )(Auth0Config.apply, Auth0Config.unapply)
 
-  private val configDesc: ConfigDescriptor[AppConfig] = (dbConfig |@| auth0Config)(AppConfig.apply, AppConfig.unapply)
+  private val httpConfig: ConfigDescriptor[HttpConfig] = int("PORT").default(8080)(HttpConfig.apply, HttpConfig.unapply)
+
+  private val configDesc: ConfigDescriptor[AppConfig] = (dbConfig |@| auth0Config |@| httpConfig)(AppConfig.apply, AppConfig.unapply)
 
   val layer: ZLayer[system.System, ReadError[String], Has[AppConfig]] = ZConfig.fromSystemEnv(configDesc)
-
 }

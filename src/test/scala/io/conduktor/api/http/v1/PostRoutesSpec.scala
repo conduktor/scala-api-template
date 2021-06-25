@@ -6,20 +6,24 @@ import sttp.model.StatusCode
 import zio.test.Assertion._
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
+import io.conduktor.api.BootstrapServer
+import zio.magic.ZioProvideMagicOps
+import zio.ZIO
+import io.conduktor.api.http.Server
 
 object PostRoutesSpec extends DefaultRunnableSpec {
 
   override def spec: ZSpec[TestEnvironment, Any] = suite("/v1/posts")(
     testM("POST / should return 200") {
       val payload = """{
-        | "title": "my test",
-        | "content": "blabla"
-        | }""".stripMargin
-      for {
-        client <- HttpClientZioBackend()
-        response <- basicRequest.body(payload).post(uri"/v1/posts").send(client)
-      } yield assert(response.code)(equalTo(StatusCode.Ok))
-
+                      | "title": "my test",
+                      | "content": "blabla"
+                      | }""".stripMargin
+      (for {
+        server   <- ZIO.service[Server.Server]
+        client   <- HttpClientZioBackend()
+        response <- basicRequest.body(payload).post(uri"${server.baseUri}/v1/posts").send(client)
+      } yield assert(response.code)(equalTo(StatusCode.Ok))).provideCustomMagicLayer(BootstrapServer.localServer)
     }
   )
 
