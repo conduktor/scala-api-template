@@ -1,33 +1,33 @@
+import com.typesafe.sbt.packager.Keys.{daemonUser, maintainer, packageName}
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport._
 import sbt.Keys._
 import sbt._
-import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixSemanticdb, _}
+
 
 object BuildHelper {
-  val Scala213 = "2.13.5"
 
-  val scalaReflectSettings = Seq(
-    libraryDependencies ++= Seq("dev.zio" %% "izumi-reflect" % "1.0.0-M16")
-  )
-
-  def stdSettings(prjName: String) = Seq(
-    name := s"$prjName",
-    (ThisBuild / scalaVersion) := Scala213,
+  val commonSettings = Seq(
     libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-    semanticdbEnabled := true,
-    semanticdbOptions += "-P:semanticdb:synthetics:on",
-    semanticdbVersion := scalafixSemanticdb.revision, // use Scalafix compatible version
-    ThisBuild / scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
-    ThisBuild / scalafixDependencies ++= List(
-      "com.github.liancheng" %% "organize-imports" % "0.5.0",
-      "com.github.vovapolu"  %% "scaluzzi"         % "0.1.20"
-    ),
+    scalacOptions += "-Ymacro-annotations",
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     (Test / parallelExecution) := true,
-    incOptions ~= (_.withLogRecompileOnMacro(false)),
-    autoAPIMappings := true
+    (Test / fork) := true
   )
 
-  implicit final class ModuleHelper(private val p: Project) extends AnyVal {
-    def module: Project = p.in(file(p.id)).settings(stdSettings(p.id))
-  }
+  lazy val dockerSettings = Seq(
+    Docker / maintainer := "Conduktor Inc <support@conduktor.io>",
+    Docker / daemonUser := "conduktor",
+    Docker / dockerRepository := Some("eu.gcr.io"),
+    Docker / packageName := sys.env.getOrElse("DOCKER_PACKAGE", ""),
+    Docker / version := sys.env.getOrElse("DOCKER_PACKAGE_VERSION", ""),
+    dockerUpdateLatest := true,
+    dockerExposedPorts := Seq(8080),
+    dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre"
+  )
+
+  lazy val noDoc = Seq(
+    (Compile / doc / sources) := Seq.empty,
+    (Compile / packageDoc / publishArtifact) := false
+  )
 }
