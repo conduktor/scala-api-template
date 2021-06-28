@@ -23,7 +23,6 @@ object PostRoutesSpec extends DefaultRunnableSpec {
         server   <- ZIO.service[Server.Server]
         client   <- HttpClientZioBackend()
         response <- basicRequest.body(payload).auth.bearer("Foo").post(uri"${server.baseUri}/v1/posts").send(client)
-        _         = println(response.body.toString())
       } yield assert(response.code)(equalTo(StatusCode.Ok))).provideCustomMagicLayer(BootstrapServer.localServer)
     }
   )
