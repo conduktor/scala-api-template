@@ -15,14 +15,10 @@ final case class DBConfig(
   gcpInstance: Option[String],
   ssl: Boolean = false
 )
-final case class Auth0Config(domain: String, audience: Option[String])
 
-final case class HttpConfig(port: Int)
-
-object AppConfig {
-
+object DBConfig {
   //doing manual mapping from env, graalvm was failing on hocon file with injected env
-  private val dbConfig: ConfigDescriptor[DBConfig] =
+  val dbConfig: ConfigDescriptor[DBConfig] =
     (
       string("DB_USER") |@|
         string("DB_PASSWORD").optional |@|
@@ -34,6 +30,15 @@ object AppConfig {
         boolean("DB_USE_SSL").default(false)
     )(DBConfig.apply, DBConfig.unapply)
 
+  val layer: ZLayer[system.System, ReadError[String], Has[DBConfig]] = ZConfig.fromSystemEnv(dbConfig)
+}
+
+final case class Auth0Config(domain: String, audience: Option[String])
+
+final case class HttpConfig(port: Int)
+
+object AppConfig {
+
   private val auth0Config: ConfigDescriptor[Auth0Config] =
     (
       string("AUTH0_DOMAIN") |@|
@@ -42,7 +47,8 @@ object AppConfig {
 
   private val httpConfig: ConfigDescriptor[HttpConfig] = int("PORT").default(8080)(HttpConfig.apply, HttpConfig.unapply)
 
-  private val configDesc: ConfigDescriptor[AppConfig] = (dbConfig |@| auth0Config |@| httpConfig)(AppConfig.apply, AppConfig.unapply)
+  private val configDesc: ConfigDescriptor[AppConfig] =
+    (DBConfig.dbConfig |@| auth0Config |@| httpConfig)(AppConfig.apply, AppConfig.unapply)
 
   val layer: ZLayer[system.System, ReadError[String], Has[AppConfig]] = ZConfig.fromSystemEnv(configDesc)
 }

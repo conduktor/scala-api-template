@@ -24,6 +24,7 @@ val zioConfigVersion = "1.0.6"
 val tapirVersion     = "0.17.19"
 val http4sVersion    = "0.21.20"
 val circeVersion     = "0.13.0"
+val flywayVersion    = "7.10.0"
 
 val effectDependencies = Seq(
   "dev.zio"              %% "zio"          % zioVersion,
@@ -77,6 +78,10 @@ val apiDocsDependencies = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion
 )
 
+val flywayDependencies = Seq(
+  "org.flywaydb" % "flyway-core" % flywayVersion
+)
+
 val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.3" % Test
 val dbTestingStack   = Seq(embeddedPostgres)
 
@@ -89,6 +94,7 @@ val dependencies =
     configDependencies ++
     apiDocsDependencies ++
     jwtDependencies ++
+    flywayDependencies ++
     Seq(
       "io.estatico" %% "newtype"      % "0.4.4",
       "eu.timepit"  %% "refined"      % "0.9.26",

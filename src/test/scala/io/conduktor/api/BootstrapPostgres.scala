@@ -18,5 +18,4 @@ object BootstrapPostgres {
       ssl = false
     )
   })
-
 }
