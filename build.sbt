@@ -58,6 +58,7 @@ val jsonDependencies = Seq(
   "io.circe"                    %% "circe-generic"    % circeVersion,
   "io.circe"                    %% "circe-parser"     % circeVersion,
   "io.circe"                    %% "circe-refined"    % circeVersion,
+  "io.circe"                    %% "circe-testing"    % circeVersion % Test,
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion
 )
 
