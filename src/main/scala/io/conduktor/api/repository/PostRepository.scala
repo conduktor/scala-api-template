@@ -25,11 +25,11 @@ trait PostRepository {
 
 object PostRepository {
   def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): ZIO[Has[PostRepository], Throwable, Post] =
-    ZIO.accessM(_.get.createPost(id, title, author, content))
+    ZIO.serviceWith(_.createPost(id, title, author, content))
 
-  def deletePost(id: UUID): ZIO[Has[PostRepository], Throwable, Unit] = ZIO.accessM(_.get.deletePost(id))
+  def deletePost(id: UUID): ZIO[Has[PostRepository], Throwable, Unit] = ZIO.serviceWith(_.deletePost(id))
 
-  def getPostById(id: UUID): ZIO[Has[PostRepository], Throwable, Post] = ZIO.accessM(_.get.findPostById(id))
+  def getPostById(id: UUID): ZIO[Has[PostRepository], Throwable, Post] = ZIO.serviceWith(_.findPostById(id))
 
-  def allPosts: ZIO[Has[PostRepository], Throwable, List[Post]] = ZIO.accessM(_.get.allPosts)
+  def allPosts: ZIO[Has[PostRepository], Throwable, List[Post]] = ZIO.serviceWith(_.allPosts)
 }

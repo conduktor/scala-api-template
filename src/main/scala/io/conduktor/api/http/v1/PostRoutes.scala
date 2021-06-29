@@ -51,23 +51,19 @@ object PostRoutes {
     ServerError(Option(error.getMessage).getOrElse(defaultMessage))
 
   private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[Has[PostService], ErrorInfo, PostDTO] =
-    ZIO
-      .accessM[Has[PostService]](_.get.createPost(user, Post.Title(post.title), Post.Content(post.content)))
+    ZIO.serviceWith[PostService](_.createPost(user, Post.Title(post.title), Post.Content(post.content)))
       .bimap(handleCreatePostError, PostDTO.from)
 
   private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ServerError, Unit] =
-    ZIO
-      .accessM[Has[PostService]](_.get.deletePost(id))
+    ZIO.serviceWith[PostService](_.deletePost(id))
       .mapError(serverError(s"Error deleting post $id"))
 
   private def getPostByIdServerLogic(id: UUID): ZIO[Has[PostService], ServerError, PostDTO] =
-    ZIO
-      .accessM[Has[PostService]](_.get.findById(id))
+    ZIO.serviceWith[PostService](_.findById(id))
       .bimap(serverError(s"Error finding post $id"), PostDTO.from)
 
   private def allPostsServerLogic: ZIO[Has[PostService], ServerError, List[PostDTO]] =
-    ZIO
-      .accessM[Has[PostService]](_.get.all)
+    ZIO.serviceWith[PostService](_.all)
       .bimap(serverError("Error listing posts"), _.map(PostDTO.from))
 
   private def handleCreatePostError(error: CreatePostError): ErrorInfo = {

@@ -4,6 +4,7 @@ import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
 import zio.{App, ExitCode, ULayer, URIO, ZIO}
 import io.conduktor.api.config.DBConfig
+import io.conduktor.api.migration.{DatabaseMigrationService, FlywayDatabaseMigrationService}
 
 object ApiMigrationApp extends App {
 

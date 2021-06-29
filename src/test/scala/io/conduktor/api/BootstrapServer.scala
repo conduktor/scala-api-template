@@ -7,6 +7,7 @@ import zio.Has
 import io.conduktor.api.http.Server
 import io.conduktor.api.auth.AuthService
 import io.conduktor.api.auth.User
+import io.conduktor.api.migration.FlywayDatabaseMigrationService
 import zio.Task
 
 object BootstrapServer {
