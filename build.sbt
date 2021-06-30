@@ -44,7 +44,7 @@ val httpDependencies = Seq(
   "com.softwaremill.sttp.tapir"   %% "tapir-zio"               % tapirVersion,
   "com.softwaremill.sttp.tapir"   %% "tapir-zio-http4s-server" % tapirVersion,
   "com.softwaremill.sttp.tapir"   %% "tapir-refined"           % tapirVersion,
-  "com.softwaremill.sttp.shared"  %% "ws"                      % "1.2.5",
+  "com.softwaremill.sttp.shared"  %% "ws"                      % "1.2.5", //resolve a conflict between client3 and tapir
   "com.softwaremill.sttp.client3" %% "core"                    % "3.3.7" % Test,
   "com.softwaremill.sttp.client3" %% "httpclient-backend-zio"  % "3.3.7" % Test
 )
