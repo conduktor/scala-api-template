@@ -1,17 +1,15 @@
 package io.conduktor.api
 
 import io.conduktor.api.auth.{AuthService, JwtAuthService}
-import io.conduktor.api.config.AppConfig.ConfEnv
-import io.conduktor.api.config.{AppConfig, Auth0Config, DBConfig, HttpConfig}
+import io.conduktor.api.config.{AppConfig, Auth0Config, DBConfig}
 import io.conduktor.api.http.Server
-import io.conduktor.api.http.v1.PostRoutes
 import io.conduktor.api.repository.PostRepository
 import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
 import io.conduktor.api.service.{PostService, PostServiceLive}
 import zio.clock.Clock
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
-import zio.{App, ExitCode, Has, RLayer, ULayer, URIO, URLayer, ZIO, ZLayer, system}
+import zio.{App, ExitCode, Has, RLayer, ULayer, URIO, ZIO, ZLayer}
 
 object ApiTemplateApp extends App {
 
@@ -30,16 +28,14 @@ object ApiTemplateApp extends App {
 
   val serviceLayer: RLayer[Has[PostRepository], Has[PostService]] = PostServiceLive.layer
 
-  val apiRuntimelayers: RLayer[Has[Auth0Config] with Has[DBConfig] with Clock with Has[PostRepository], Has[AuthService] with Has[PostService] with Logging] = authLayer ++ serviceLayer ++ logLayerLive
-
-  private val requiringConfigs: RLayer[ConfEnv with Clock, PostRoutes.Env] = (ZLayer.identity[Clock] ++ ZLayer.identity[Has[Auth0Config]] ++ ZLayer.identity[Has[DBConfig]] ++ dbLayer) >>> apiRuntimelayers
-
-  private val env: RLayer[zio.ZEnv, zio.ZEnv with Has[AuthService] with Has[PostService] with Has[HttpConfig]] = (ZLayer.identity[zio.ZEnv] ++ AppConfig.layer) >+> (ZLayer.identity[zio.ZEnv] ++ requiringConfigs)
+  import zio.magic._
+  private val env: RLayer[zio.ZEnv, Server.Env] =
+    ZLayer.fromSomeMagic[zio.ZEnv, Server.Env](AppConfig.layer, dbLayer, authLayer, serviceLayer, logLayerLive)
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
     Server.serve.useForever
       .tapError(err => ZIO.effect(Option(err.getMessage).fold(err.printStackTrace())(println(_))))
-      .provideLayer(env)
+      .provideSomeLayer(env)
       .exitCode
 
 }
