@@ -1,8 +1,11 @@
 package io.conduktor.api.http.v1
 
+import io.conduktor.api.auth.User
 import io.conduktor.api.config.{AppConfig, Auth0Config, DBConfig, HttpConfig}
 import io.conduktor.api.http.Server
 import io.conduktor.api.http.Server.Server
+import io.conduktor.api.model.Post
+import io.conduktor.api.service.PostService
 import io.conduktor.api.{ApiTemplateApp, BootstrapServer, MemoryRepositorySpec}
 import sttp.capabilities
 import sttp.capabilities.zio.ZioStreams
@@ -13,7 +16,10 @@ import zio.test.Assertion.{containsString, equalTo, isRight}
 import zio.test.TestAspect.sequential
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
-import zio.{Has, Task, ZIO, ZLayer}
+import zio.{Has, IO, Task, ZIO, ZLayer}
+
+import java.util.UUID
+import scala.collection.mutable
 
 object PostRoutesSpec extends DefaultRunnableSpec {
 
@@ -46,9 +52,39 @@ object PostRoutesSpec extends DefaultRunnableSpec {
     zio.ZEnv
   ] ++ (MemoryRepositorySpec.testLayer >>> ApiTemplateApp.serviceLayer) ++ (memAppConf >>> ApiTemplateApp.httpConfig) ++ BootstrapServer.dummyAuth) >>> Server.layer)).orDie
 
+  val stub: PostService                                                              = new PostService() {
+    private val posts = mutable.Map.empty[UUID, Post]
+
+    override def createPost(user: User, title: Post.Title, content: Post.Content): IO[PostService.CreatePostError, Post] = IO.succeed {
+      val id = UUID.randomUUID()
+
+      posts(id) = Post(
+        id = id,
+        title = title,
+        author = user,
+        published = false,
+        content = content
+      )
+      posts(id)
+    }
+
+    override def deletePost(uuid: UUID): Task[Unit] = Task(posts.remove(uuid))
+
+    override def findById(uuid: UUID): Task[Post] = Task(posts(uuid))
+
+    override def all: Task[List[Post]] = Task(posts.values.toList)
+  }
+  val stubServicesLayer: ZLayer[zio.ZEnv, Nothing, Has[HttpClient] with Has[Server]] =
+    (httpClient ++ ((ZLayer.identity[zio.ZEnv] ++ (BootstrapServer.dummyAuth ++ (memAppConf >>> ApiTemplateApp.httpConfig) ++ ZLayer
+      .succeed(stub))) >>> Server.layer)).orDie
+
   private case class TestEnv(name: String, layer: Layer)
 
-  private val envs: Seq[TestEnv] = Seq(TestEnv("with db", dbLayers), TestEnv("with memory repository", memoryLayer))
+  private val envs: Seq[TestEnv] = Seq(
+    TestEnv("with db", dbLayers),
+    TestEnv("with memory repository", memoryLayer),
+    TestEnv("with stub services", stubServicesLayer)
+  )
 
   private val suites: Seq[String => ZSpec[Env, Throwable]] = Seq(`/v1/posts`)
 
