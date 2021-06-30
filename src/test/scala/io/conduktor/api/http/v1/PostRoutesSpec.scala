@@ -17,7 +17,7 @@ import zio.test.Assertion.{containsString, equalTo, isRight}
 import zio.test.TestAspect.sequential
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
-import zio.{Has, IO, RLayer, Task, TaskLayer, ULayer, ZIO, ZLayer}
+import zio.{Function0ToLayerSyntax, Has, IO, RLayer, Task, TaskLayer, ULayer, ZIO, ZLayer}
 
 import java.util.UUID
 import scala.collection.mutable
@@ -46,7 +46,7 @@ private class Stub extends PostService {
 }
 
 private object Stub {
-  val layer: ULayer[Has[PostService]] = ZLayer.succeed(new Stub)
+  val layer: ULayer[Has[PostService]] = (() => new Stub).toLayer
 }
 
 object PostRoutesSpec extends DefaultRunnableSpec {
