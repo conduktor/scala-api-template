@@ -13,7 +13,7 @@ import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.clock.Clock
 import zio.interop.catz._
-import zio.{Has, RIO, RLayer, RManaged, ZEnv, ZLayer, ZManaged}
+import zio.{Has, RIO, RLayer, RManaged, ZManaged}
 
 import scala.concurrent.duration._
 

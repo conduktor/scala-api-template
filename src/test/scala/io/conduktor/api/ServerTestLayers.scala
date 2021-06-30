@@ -3,9 +3,8 @@ package io.conduktor.api
 import eu.timepit.refined.auto._
 import io.conduktor.api.auth.{AuthService, User}
 import io.conduktor.api.config._
-import io.conduktor.api.http.Server
 import io.conduktor.api.migration.FlywayDatabaseMigrationService
-import zio.{Has, RLayer, Task, TaskLayer, ULayer, ZLayer}
+import zio.{Has, Task, TaskLayer, ULayer, ZLayer}
 
 object ServerTestLayers {
 

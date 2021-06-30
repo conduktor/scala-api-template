@@ -6,7 +6,7 @@ import io.conduktor.api.repository.PostRepository
 import io.conduktor.api.types.UserName
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec}
-import zio.{Has, Task, ULayer, ZIO, ZLayer}
+import zio.{Has, Task, ULayer, ZIO}
 
 import java.util.UUID
 
@@ -46,7 +46,7 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
     }
   }
 
-  val testLayer: ULayer[Has[PostRepository]] = ZLayer.succeed[PostRepository](new InMemoryPostRepository)
+  val testLayer: ULayer[Has[PostRepository]] = (() => new InMemoryPostRepository).toLayer
 
   override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "memory").provideCustomLayer(testLayer)
 
