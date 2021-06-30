@@ -13,12 +13,9 @@ import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.clock.Clock
 import zio.interop.catz._
-import zio.{RIO, ZEnv}
+import zio.{Has, RIO, RLayer, RManaged, ZEnv, ZLayer, ZManaged}
 
 import scala.concurrent.duration._
-import zio.ZManaged
-import zio.Has
-import zio.ZLayer
 
 /*
   Interpret Tapir endpoints as Http4s routes
@@ -35,6 +32,7 @@ object RoutesInterpreter {
 object Server {
 
   type Server = org.http4s.server.Server[RIO[PostRoutes.Env with Clock, *]]
+  type Env = Clock with PostRoutes.Env with Has[HttpConfig]
 
   private lazy val yaml: String = {
     import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
@@ -48,8 +46,8 @@ object Server {
   val methodConfig: CORSConfig = CORSConfig(anyOrigin = true, anyMethod = true, allowCredentials = true, maxAge = 1.day.toSeconds)
 
   // Starting the server
-  val serve: ZManaged[ZEnv with PostRoutes.Env with Has[HttpConfig], Throwable, Server] =
-    ZManaged.runtime[ZEnv with PostRoutes.Env with Has[HttpConfig]].flatMap {
+  val serve: RManaged[Env, Server] =
+    ZManaged.runtime[Env].flatMap {
       implicit runtime => // This is needed to derive cats-effect instances for that are needed by http4s
         for {
           conf   <- ZManaged.service[HttpConfig]
@@ -62,5 +60,5 @@ object Server {
         } yield server
     }
 
-  val layer: ZLayer[ZEnv with PostRoutes.Env with Has[HttpConfig], Throwable, Has[Server]] = serve.toLayer
+  val layer: RLayer[Env, Has[Server]] = serve.toLayer
 }

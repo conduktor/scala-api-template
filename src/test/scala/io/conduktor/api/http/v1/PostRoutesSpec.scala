@@ -1,7 +1,7 @@
 package io.conduktor.api.http.v1
 
 import io.conduktor.api.auth.User
-import io.conduktor.api.config.{AppConfig, Auth0Config, DBConfig, HttpConfig}
+import io.conduktor.api.config.HttpConfig
 import io.conduktor.api.http.Server
 import io.conduktor.api.http.Server.Server
 import io.conduktor.api.model.Post
@@ -31,26 +31,7 @@ object PostRoutesSpec extends DefaultRunnableSpec {
 
   val dbLayers: Layer = (httpClient ++ BootstrapServer.localServer).orDie
 
-  val memAppConf = ZLayer.succeed(
-    AppConfig(
-      DBConfig(
-        user = "foo",
-        password = None,
-        host = "blabl",
-        port = 22,
-        database = "db",
-        maxPoolSize = 11,
-        gcpInstance = None,
-        ssl = false
-      ),
-      Auth0Config("foo", None),
-      HttpConfig(0)
-    )
-  )
-
-  val memoryLayer: Layer = (httpClient ++ ((ZLayer.identity[
-    zio.ZEnv
-  ] ++ (MemoryRepositorySpec.testLayer >>> ApiTemplateApp.serviceLayer) ++ (memAppConf >>> ApiTemplateApp.httpConfig) ++ BootstrapServer.dummyAuth) >>> Server.layer)).orDie
+  val memoryLayer: Layer = (httpClient ++ ((ZLayer.identity[zio.ZEnv] ++ (MemoryRepositorySpec.testLayer >>> ApiTemplateApp.serviceLayer) ++ ZLayer.succeed(HttpConfig(0)) ++ BootstrapServer.dummyAuth) >>> Server.layer)).orDie
 
   val stub: PostService                                                              = new PostService() {
     private val posts = mutable.Map.empty[UUID, Post]
@@ -68,14 +49,14 @@ object PostRoutesSpec extends DefaultRunnableSpec {
       posts(id)
     }
 
-    override def deletePost(uuid: UUID): Task[Unit] = Task(posts.remove(uuid))
+    override def deletePost(uuid: UUID): Task[Unit] = Task(posts.remove(uuid)).unit
 
     override def findById(uuid: UUID): Task[Post] = Task(posts(uuid))
 
     override def all: Task[List[Post]] = Task(posts.values.toList)
   }
   val stubServicesLayer: ZLayer[zio.ZEnv, Nothing, Has[HttpClient] with Has[Server]] =
-    (httpClient ++ ((ZLayer.identity[zio.ZEnv] ++ (BootstrapServer.dummyAuth ++ (memAppConf >>> ApiTemplateApp.httpConfig) ++ ZLayer
+    (httpClient ++ ((ZLayer.identity[zio.ZEnv] ++ (BootstrapServer.dummyAuth ++ ZLayer.succeed(HttpConfig(0)) ++ ZLayer
       .succeed(stub))) >>> Server.layer)).orDie
 
   private case class TestEnv(name: String, layer: Layer)
