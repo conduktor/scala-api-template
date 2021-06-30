@@ -4,7 +4,7 @@ import com.auth0.jwk.{Jwk, JwkProviderBuilder}
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 import io.circe.parser.decode
-import io.conduktor.api.auth.JwtAuthService.{Header, BearerToken}
+import io.conduktor.api.auth.JwtAuthService.{AuthException, BearerToken, Header}
 import io.conduktor.api.config.Auth0Config
 import io.conduktor.api.types.UserName
 import pdi.jwt.{JwtAlgorithm, JwtBase64, JwtCirce, JwtClaim}
@@ -64,7 +64,7 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
         case s"Bearer $a" => Some(BearerToken(a))
         case _            => None
       }
-    }.orElseFail(new Throwable("Invalid auth header"))
+    }.orElseFail(new AuthException("Invalid auth header"))
 
   private def validateJwt(token: BearerToken): RIO[Clock, JwtClaim] = for {
     jwk    <- getJwk(token) // Get the secret key for this token
@@ -77,14 +77,14 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
     for {
       header    <- extractHeader(token)
       jwtHeader <- Task(JwtCirce.parseHeader(header.value))
-      kid       <- IO.fromOption(jwtHeader.keyId).orElseFail(new Exception("Unable to retrieve kid"))
+      kid       <- IO.fromOption(jwtHeader.keyId).orElseFail(new AuthException("Unable to retrieve kid"))
       jwk       <- Task(cachedJwkProvider.get(kid))
     } yield jwk
 
   private def extractHeader(jwt: BearerToken): Task[Header] =
     jwt.value match {
       case s"$header.$body.$sig" => ZIO.succeed(Header(JwtBase64.decodeString(header)))
-      case _                     => ZIO.fail(new Exception("Token does not match the correct pattern"))
+      case _                     => ZIO.fail(new AuthException("Token does not match the correct pattern"))
     }
 
   private def validateClaims(claims: JwtClaim) =
@@ -98,6 +98,8 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
 object JwtAuthService {
   @newtype private case class BearerToken(value: String)
   @newtype private case class Header(value: String)
+
+  class AuthException(message: String) extends RuntimeException(message)
 
   val layer: URLayer[Has[Auth0Config] with Clock, Has[AuthService]] = (new JwtAuthService(_, _)).toLayer
 }
