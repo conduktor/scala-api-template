@@ -18,17 +18,20 @@ trait AuthService {
 }
 
 object AuthService {
-  def auth(token: String): ZIO[Has[AuthService], Throwable, User] = ZIO.accessM(_.get.auth(token))
+  def auth(token: String): ZIO[Has[AuthService], Throwable, User] = ZIO.serviceWith(_.auth(token))
 }
 
 final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends AuthService {
 
+  private val supportedAlgorithms = Seq(JwtAlgorithm.RS256)
+  
   implicit val userCodec: Codec[User] = deriveCodec
 
   private def validateJwt(token: String): ZIO[Clock, Throwable, JwtClaim] = for {
     jwk    <- getJwk(token) // Get the secret key for this token
+
     claims <-
-      ZIO.fromTry(JwtCirce.decode(token, jwk.getPublicKey, Seq(JwtAlgorithm.RS256))) // Decode the token using the secret key
+      ZIO.fromTry(JwtCirce.decode(token, jwk.getPublicKey, supportedAlgorithms)) // Decode the token using the secret key
     _      <- validateClaims(claims) // validate the data stored inside the token
   } yield claims
 
@@ -43,7 +46,7 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
       (JwtBase64.decodeString(header), JwtBase64.decodeString(body), sig)
     }
 
-  private val getJwk = (token: String) =>
+  private def getJwk(token: String) =
     (splitToken andThen decodeElements)(token) flatMap { case (header, _, _) =>
       val jwtHeader   = JwtCirce.parseHeader(header)
       val jwkProvider = new UrlJwkProvider(s"https://${auth0Conf.domain}")
