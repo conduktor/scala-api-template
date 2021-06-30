@@ -1,19 +1,15 @@
 package io.conduktor.api
 
-import io.conduktor.api.auth.JwtAuthService
-import io.conduktor.api.config.AppConfig
-import io.conduktor.api.config.HttpConfig
+import io.conduktor.api.auth.{AuthService, JwtAuthService}
+import io.conduktor.api.config.{AppConfig, Auth0Config, DBConfig}
 import io.conduktor.api.http.Server
+import io.conduktor.api.repository.PostRepository
 import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
-import io.conduktor.api.service.PostServiceLive
+import io.conduktor.api.service.{PostService, PostServiceLive}
+import zio.clock.Clock
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
-import zio.{App, ExitCode, ULayer, URIO, ZIO}
-import zio.ZLayer
-import io.conduktor.api.http.v1.PostRoutes
-import zio.Has
-import io.conduktor.api.config.DBConfig
-import io.conduktor.api.config.Auth0Config
+import zio.{App, ExitCode, Has, RLayer, ULayer, URIO, ZIO, ZLayer}
 
 object ApiTemplateApp extends App {
 
@@ -26,23 +22,20 @@ object ApiTemplateApp extends App {
   val logLayerLive: ULayer[Logging]        =
     Slf4jLogger.make((context, message) => "[correlation-id = %s] %s".format(context(correlationId), message))
 
+  val authLayer: RLayer[Has[Auth0Config] with Clock, Has[AuthService]] = JwtAuthService.layer
+
+  val dbLayer: RLayer[Has[DBConfig], Has[PostRepository]] = DbSessionPool.layer >>> DbPostRepository.layer
+
+  val serviceLayer: RLayer[Has[PostRepository], Has[PostService]] = PostServiceLive.layer
+
   import zio.magic._
-  val apiRuntimelayers = ZLayer.fromSomeMagic[zio.ZEnv with Has[AppConfig], zio.ZEnv with PostRoutes.Env with Has[HttpConfig]](
-    DbSessionPool.layer,
-    DbPostRepository.layer,
-    JwtAuthService.layer,
-    PostServiceLive.layer,
-    logLayerLive,
-    ZLayer.fromService[AppConfig, Auth0Config](_.auth0),
-    ZLayer.fromService[AppConfig, DBConfig](_.db),
-    ZLayer.fromService[AppConfig, HttpConfig](_.http)
-  )
+  private val env: RLayer[zio.ZEnv, Server.Env] =
+    ZLayer.fromSomeMagic[zio.ZEnv, Server.Env](AppConfig.layer, dbLayer, authLayer, serviceLayer, logLayerLive)
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
     Server.serve.useForever
       .tapError(err => ZIO.effect(Option(err.getMessage).fold(err.printStackTrace())(println(_))))
-      .provideSomeMagicLayer[zio.ZEnv with Has[AppConfig]](apiRuntimelayers)
-      .provideSomeMagicLayer[zio.ZEnv](AppConfig.layer)
+      .provideSomeLayer(env)
       .exitCode
 
 }

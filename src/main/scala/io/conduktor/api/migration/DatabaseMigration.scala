@@ -1,4 +1,4 @@
-package io.conduktor.api
+package io.conduktor.api.migration
 
 import zio._
 import io.conduktor.api.config.DBConfig
@@ -9,7 +9,7 @@ trait DatabaseMigrationService {
 }
 
 object DatabaseMigrationService {
-  def migrate(): ZIO[Has[DatabaseMigrationService], Throwable, Unit] = ZIO.accessM(_.get.migrate())
+  def migrate(): ZIO[Has[DatabaseMigrationService], Throwable, Unit] = ZIO.serviceWith(_.migrate())
 }
 
 final class FlywayDatabaseMigrationService(config: DBConfig) extends DatabaseMigrationService {
