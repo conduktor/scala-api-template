@@ -131,7 +131,8 @@ lazy val root = project
     buildInfoObject := "BuildInfo",
     libraryDependencies ++= dependencies,
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
-    scalacOptions += "-Ymacro-annotations"
+    scalacOptions += "-Ymacro-annotations",
+    scalacOptions -= "-Xfatal-warnings"
   )
 
 def dockerImageTag: String = {
