@@ -12,7 +12,7 @@ A template of API we'll use at Conduktor, to work with this template of Front-en
 - ZIO (effect, stream, config, tests)
 
 ## Development flow
-- tag with v* to deploy to production
+- tag to deploy to production
 - push main to deploy to staging
 
 The stack is deployed on Google Cloud (Cloud Run + Cloud SQL)
