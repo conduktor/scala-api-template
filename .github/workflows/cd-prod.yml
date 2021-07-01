@@ -3,11 +3,13 @@ name: CD Prod
 on:
   push:
     tags:
-      - v*
+      - '*'
 
 jobs:
   cd:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${GITHUB_REF##*/}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -35,12 +37,13 @@ jobs:
           sbt docker:publish
         env:
           DOCKER_PACKAGE: ${{ secrets.GCP_PROJECT_ID }}/api-template-prod
+          DOCKER_PACKAGE_VERSION: ${{ env.RELEASE_TAG }}
 
       - name: Deploy Cloud Run
         run: |
           gcloud run deploy api-template-prod \
           --region europe-west1 \
-          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:latest \
+          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:${{ env.RELEASE_TAG }} \
           --platform managed \
           --allow-unauthenticated \
           --cpu 1000m --memory 512Mi --max-instances 1 \
