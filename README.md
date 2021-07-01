@@ -1,27 +1,52 @@
 # scala-api-template
 
-A template of API we'll use at Conduktor, to work with this template of Front-end: https://github.com/conduktor/react-app-template.
+A template for writing Restful APIs we'll use at Conduktor.
+It's supposed to work with this template of Front-end: https://github.com/conduktor/react-app-template.
 
 
-## Requirements / Tech
+## Requirements 
 
-- CRUD (http4s, circe, tapir)
-- OpenApi exposed via tapir
-- JWT validation against auth0
-- Postgres (async, not jdbc) via Skunk, migrations with Flyway Migrate
-- ZIO (effect, stream, config, tests)
+The requirements are:
+
+- store data into Postgres
+- handle Postgres schema and schema migration programmatically
+- expose domain logic via a RESTful API
+- describe the RESTful API using OpenAPI standard
+- secure the RESTful API with JWT using auth0 service (https://auth0.com) but avoid vendor lock-in
+- use only non-blocking technologies and implement only stateless services to handle high-scale workload
+- leverage Scala type-system and hexagonal architecture to minimize the testing requirements
+- enable testing at every layer: domain logic, end-to-end, data-access, RESTful API, integration of various layer combinations
+- enforce green tests and style conformance using Github actions
+- generate a docker image using Github actions and push it to a repository
+- allows developing proprietary software
+
+## Tech
+
+This is the list of technologies we chose to implement our requirements:
+
+- http4s (https://http4s.org/) for HTTP implementation, APL v2 license
+- circe (https://circe.github.io/circe/) for JSON serialization, APL v2 license
+- tapir (https://tapir.softwaremill.com) for RESTful API description, APL v2 license
+- skunk (https://tpolecat.github.io/skunk/) for async (non-jdbc) Postgres access, MIT license
+- flyway (https://flywaydb.org/) for database schema handling, APL v2 license
+- zio (https://zio.dev/) for effect, streaming, logging, config and tests, APL v2 license
+- JWT validation using auth0-provided Java library, MIT license
+- refined (https://github.com/fthomas/refined) for defining value objects constraints, MIT license
+- newtype (https://github.com/estatico/scala-newtype) for generating value objects with no runtime cost, APL v2 license
+- sbt-native-packager (https://sbt-native-packager.readthedocs.io) for docker image generation, BSD-2-Clause License
+
 
 ## Development flow
-- tag to deploy to production
-- push main to deploy to staging
+
+- create branches from main
+- merge into main to release Staging via Github action
+- tag main to release Prod via Github action
 
 The stack is deployed on Google Cloud (Cloud Run + Cloud SQL)
 
 
 ## Database
-The database layer is done via [Skunk](https://tpolecat.github.io/skunk/index.html) (using native postgres, not jdbc)
-
-(TODO use skunk to validate db schema against compiled queries as of integration tests)
+The database layer is written via [skunk](https://tpolecat.github.io/skunk/index.html) (using native postgres, not jdbc)
 
 The database is hosted at CloudSQL. It can only be accessed via the CloudSQL proxy, behind the VPC, or by whitelisting an ip.
 
@@ -29,32 +54,24 @@ We use the VPC option (the proxy option does not fit well with Skunk config mode
 
 
 ## Migration
-Database provisioning / migration is done via [Flyway](https://flywaydb.org/)
-It is schema based (found in /src/main/resources/db/migration/).
+Database provisioning / migration is done via [flyway](https://flywaydb.org/)
 
-We try to do only **backward compatible** changes. That allows us to simplify the integration (no downtime), allow rollbacks and prevent any data loss.
+When respecting the flyway convention, the migration will apply on test database and at application start to ensure
+the database is up-to-date with current running code.
 
-To run migration when the server is starting up, you have to enabled the migration flag env (DB_MIGRATION=true). It's disabled by default.
-
-You can also run the migration with sbt :
-
-`sbt migrate-apply` : apply migrations to your database
 
 ## Auth
 
-Auth is simply a JWT validation + data extraction, against an auth0 tenant.
+Auth is a JWT validation + data extraction, against an auth0 tenant.
 
-We just retrieve the exposed public key from auth0, and use it to validate et decode the token provided by the frontend as a Bearer Authorization header
+We retrieve the exposed public key from auth0, and use it to validate et decode the token provided by the frontend as a Bearer Authorization header
 
 
 ## ISSUES
 
- - Intellij can't type properly macros (such as skunk's "sql" StringOps)
-Using Metals is therefore recommended when dealing with repositories
+ - Intellij can't type properly macros (such as skunk's "sql" StringOps),
+using Metals is therefore recommended when dealing with repositories
 
 ## TODOS
-- tagged types with codecs (server, db)
-- tests (+ integration test with the DB to run in the CI)
 - domain-specific error fmk
 - streaming endpoints (paginated, websocket)
-- db migration in the CI (requires a cloudSQL proxy step)
