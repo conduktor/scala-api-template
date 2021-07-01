@@ -20,7 +20,6 @@ object BuildHelper {
     Docker / daemonUser := "conduktor",
     Docker / dockerRepository := Some("eu.gcr.io"),
     Docker / packageName := sys.env.getOrElse("DOCKER_PACKAGE", ""),
-    Docker / version := sys.env.getOrElse("DOCKER_PACKAGE_VERSION", ""),
     dockerUpdateLatest := true,
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre"
