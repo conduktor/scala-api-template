@@ -123,11 +123,8 @@ val apiDocsDependencies = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion
 )
 
-val postgresDependencies = Seq(
-  "org.postgresql" % "postgresql" % "42.2.22"
-)
-
 val flywayDependencies = Seq(
+  "org.postgresql" % "postgresql" % "42.2.22",
   "org.flywaydb" % "flyway-core" % flywayVersion
 )
 
@@ -143,7 +140,6 @@ val dependencies =
     configDependencies ++
     apiDocsDependencies ++
     jwtDependencies ++
-    postgresDependencies ++
     flywayDependencies ++
     Seq(
       "io.estatico" %% "newtype"      % "0.4.4",
