@@ -35,6 +35,8 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
       .cached(auth0Conf.cacheSize.toLong, auth0Conf.ttl.toSeconds, TimeUnit.SECONDS)
       .build()
 
+  private implicit val userCodec: Codec[User] = deriveCodec
+
   private def clockFromOffset(now: OffsetDateTime): java.time.Clock = new java.time.Clock {
     override def getZone: ZoneId = now.getOffset
 
@@ -48,7 +50,6 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
   }
 
   override def auth(token: String): Task[User] = {
-    implicit val userCodec: Codec[User] = deriveCodec
     for {
       bearer <- extractBearer(token)
       claims <- validateJwt(bearer)
