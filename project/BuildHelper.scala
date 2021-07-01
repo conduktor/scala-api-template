@@ -24,7 +24,8 @@ object BuildHelper {
     dockerUpdateLatest := true,
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre"
-  )
+  ) ++ sys.env.get("DOCKER_PACKAGE_VERSION").map(v =>  Seq(Docker / version := v)).getOrElse(Seq.empty)
+
 
   lazy val noDoc = Seq(
     (Compile / doc / sources) := Seq.empty,
