@@ -14,6 +14,7 @@ import io.estatico.newtype.macros.newtype
 
 import java.time.{Instant, OffsetDateTime, ZoneId}
 import java.util.concurrent.TimeUnit
+import scala.annotation.nowarn
 
 final case class User(name: UserName)
 
@@ -82,6 +83,7 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
       jwk       <- Task(cachedJwkProvider.get(kid))
     } yield jwk
 
+  @nowarn
   private def extractHeader(jwt: BearerToken): Task[Header] =
     jwt.value match {
       case s"$header.$body.$sig" => ZIO.succeed(Header(JwtBase64.decodeString(header)))
