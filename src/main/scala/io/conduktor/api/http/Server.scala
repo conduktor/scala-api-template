@@ -3,6 +3,7 @@ package io.conduktor.api.http
 import cats.syntax.all._
 import io.conduktor.api.http.v1.PostRoutes
 import io.conduktor.api.config.HttpConfig
+import io.conduktor.api.http.health.HealthRoutes
 import org.http4s.HttpRoutes
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -21,11 +22,16 @@ import scala.concurrent.duration._
   Interpret Tapir endpoints as Http4s routes
  */
 object RoutesInterpreter {
-  val routes: HttpRoutes[RIO[PostRoutes.Env with Clock, *]] =
+
+  type Env = PostRoutes.Env
+
+  val endpoints: List[ZServerEndpoint[Env, _, _, _]] =
+    HealthRoutes.Endpoints.all.map(_.widen[Env]) ++
+  PostRoutes.Endpoints.all.map(_.widen[Env])
+
+  val routes: HttpRoutes[RIO[Env with Clock, *]] =
     ZHttp4sServerInterpreter
-      .from(
-        PostRoutes.Endpoints.all.map(_.widen[PostRoutes.Env])
-      )
+      .from[Env](endpoints)
       .toRoutes
 }
 
