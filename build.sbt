@@ -130,6 +130,7 @@ lazy val root = project
     buildInfoKeys := Seq[BuildInfoKey](organization, moduleName, name, version, scalaVersion, sbtVersion, isSnapshot),
     buildInfoPackage := "io.conduktor",
     buildInfoObject := "BuildInfo",
+    Compile / mainClass := Some("io.conduktor.api.ApiTemplateApp"),
     libraryDependencies ++= dependencies,
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     scalacOptions += "-Ymacro-annotations",
