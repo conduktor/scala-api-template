@@ -2,6 +2,7 @@ package io.conduktor.api.config
 
 import zio.config._
 import ConfigDescriptor._
+import zio.duration._
 import zio.{Has, ZLayer, system}
 
 final case class DBConfig(
@@ -32,7 +33,10 @@ object DBConfig {
   val layer: ZLayer[system.System, ReadError[String], Has[DBConfig]] = ZConfig.fromSystemEnv(dbConfig)
 }
 
-final case class Auth0Config(domain: String, audience: Option[String])
+final case class Auth0Config(domain: String, audience: Option[String]) {
+  val cacheSize: Int = 100
+  val ttl: Duration = 10.hours
+}
 
 final case class HttpConfig(port: Int)
 

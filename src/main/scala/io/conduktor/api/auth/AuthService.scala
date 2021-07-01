@@ -1,15 +1,19 @@
 package io.conduktor.api.auth
 
-import com.auth0.jwk.UrlJwkProvider
+import com.auth0.jwk.{Jwk, JwkProviderBuilder}
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
+import io.circe.parser.decode
+import io.conduktor.api.auth.JwtAuthService.{AuthException, BearerToken, Header}
 import io.conduktor.api.config.Auth0Config
 import io.conduktor.api.types.UserName
 import pdi.jwt.{JwtAlgorithm, JwtBase64, JwtCirce, JwtClaim}
-import zio.{Has, _}
 import zio.clock.Clock
+import zio.{Has, _}
+import io.estatico.newtype.macros.newtype
 
 import java.time.{Instant, OffsetDateTime, ZoneId}
+import java.util.concurrent.TimeUnit
 
 final case class User(name: UserName)
 
@@ -18,39 +22,20 @@ trait AuthService {
 }
 
 object AuthService {
-  def auth(token: String): ZIO[Has[AuthService], Throwable, User] = ZIO.accessM(_.get.auth(token))
+  def auth(token: String): RIO[Has[AuthService], User] = ZIO.serviceWith(_.auth(token))
 }
 
 final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends AuthService {
 
-  implicit val userCodec: Codec[User] = deriveCodec
+  private val supportedAlgorithms = Seq(JwtAlgorithm.RS256)
+  private val issuer              = s"https://${auth0Conf.domain}"
 
-  private def validateJwt(token: String): ZIO[Clock, Throwable, JwtClaim] = for {
-    jwk    <- getJwk(token) // Get the secret key for this token
-    claims <-
-      ZIO.fromTry(JwtCirce.decode(token, jwk.getPublicKey, Seq(JwtAlgorithm.RS256))) // Decode the token using the secret key
-    _      <- validateClaims(claims) // validate the data stored inside the token
-  } yield claims
+  private val cachedJwkProvider =
+    new JwkProviderBuilder(issuer)
+      .cached(auth0Conf.cacheSize.toLong, auth0Conf.ttl.toSeconds, TimeUnit.SECONDS)
+      .build()
 
-  private val splitToken = (jwt: String) =>
-    jwt match {
-      case s"$header.$body.$sig" => ZIO.succeed((header, body, sig))
-      case _                     => ZIO.fail(new Exception("Token does not match the correct pattern"))
-    }
-
-  private val decodeElements = (data: Task[(String, String, String)]) =>
-    data map { case (header, body, sig) =>
-      (JwtBase64.decodeString(header), JwtBase64.decodeString(body), sig)
-    }
-
-  private val getJwk = (token: String) =>
-    (splitToken andThen decodeElements)(token) flatMap { case (header, _, _) =>
-      val jwtHeader   = JwtCirce.parseHeader(header)
-      val jwkProvider = new UrlJwkProvider(s"https://${auth0Conf.domain}")
-      jwtHeader.keyId.map { k =>
-        Task(jwkProvider.get(k))
-      } getOrElse ZIO.fail(new Exception("Unable to retrieve kid"))
-    }
+  private implicit val userCodec: Codec[User] = deriveCodec
 
   private def clockFromOffset(now: OffsetDateTime): java.time.Clock = new java.time.Clock {
     override def getZone: ZoneId = now.getOffset
@@ -64,32 +49,58 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service) extends
     clockFromOffset
   }
 
-  private val validateClaims = (claims: JwtClaim) =>
-    withJavaClock.flatMap { implicit clock =>
-      if (claims.isValid(s"https://${auth0Conf.domain}/")) {
-        ZIO.succeed(claims)
-      } else {
-        ZIO.fail(new Exception("The JWT did not pass validation"))
+  override def auth(token: String): Task[User] = {
+    for {
+      bearer <- extractBearer(token)
+      claims <- validateJwt(bearer)
+      user   <- ZIO.fromEither(decode[User](claims.content))
+    } yield user
+  }
+    //log
+    .provide(Has(clock))
+
+  private def extractBearer(token: String): Task[BearerToken] =
+    ZIO.fromOption {
+      token match {
+        case s"Bearer $a" => Some(BearerToken(a))
+        case _            => None
       }
+    }.orElseFail(new AuthException("Invalid auth header"))
+
+  private def validateJwt(token: BearerToken): RIO[Clock, JwtClaim] = for {
+    jwk    <- getJwk(token) // Get the secret key for this token
+    claims <-
+      ZIO.fromTry(JwtCirce.decode(token.value, jwk.getPublicKey, supportedAlgorithms)) // Decode the token using the secret key
+    _      <- validateClaims(claims) // validate the data stored inside the token
+  } yield claims
+
+  private def getJwk(token: BearerToken): Task[Jwk] =
+    for {
+      header    <- extractHeader(token)
+      jwtHeader <- Task(JwtCirce.parseHeader(header.value))
+      kid       <- IO.fromOption(jwtHeader.keyId).orElseFail(new AuthException("Unable to retrieve kid"))
+      jwk       <- Task(cachedJwkProvider.get(kid))
+    } yield jwk
+
+  private def extractHeader(jwt: BearerToken): Task[Header] =
+    jwt.value match {
+      case s"$header.$body.$sig" => ZIO.succeed(Header(JwtBase64.decodeString(header)))
+      case _                     => ZIO.fail(new AuthException("Token does not match the correct pattern"))
     }
 
-  override def auth(token: String): Task[User] =
-    (for {
-      bearer <- ZIO.fromOption {
-                  token match {
-                    case s"Bearer $a" => Some(a)
-                    case _            => None
-                  }
-                }.orElseFail(new Throwable("Invalid auth header"))
-      claims <- validateJwt(bearer)
-      json   <- ZIO.fromEither(io.circe.parser.parse(claims.content))
-      user   <- ZIO.fromEither(json.as[User])
-    } yield user)
-      //log
-      .provide(Has(clock))
-
+  private def validateClaims(claims: JwtClaim) =
+    withJavaClock.flatMap { implicit clock =>
+      ZIO
+        .fail(new RuntimeException("The JWT did not pass validation"))
+        .unless(claims.isValid(issuer)(clock))
+    }
 }
 
 object JwtAuthService {
+  @newtype private case class BearerToken(value: String)
+  @newtype private case class Header(value: String)
+
+  class AuthException(message: String) extends RuntimeException(message)
+
   val layer: URLayer[Has[Auth0Config] with Clock, Has[AuthService]] = (new JwtAuthService(_, _)).toLayer
 }
