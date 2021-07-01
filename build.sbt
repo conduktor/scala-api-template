@@ -108,7 +108,6 @@ lazy val dockerSettings = Seq(
   Docker / daemonUser := "conduktor",
   Docker / dockerRepository := Some("eu.gcr.io"),
   Docker / packageName := sys.env.getOrElse("DOCKER_PACKAGE", ""),
-  Docker / version := sys.env.getOrElse("DOCKER_PACKAGE_VERSION", ""),
   dockerUpdateLatest := true,
   dockerExposedPorts := Seq(8080),
   dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre",
@@ -116,7 +115,7 @@ lazy val dockerSettings = Seq(
     case cmd @ Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash && apk add shadow"))
     case other                => List(other)
   }
-)
+) ++ sys.env.get("DOCKER_PACKAGE_VERSION").map(v =>  Seq(Docker / version := v)).getOrElse(Seq.empty)
 
 lazy val root = project
   .in(file("."))
