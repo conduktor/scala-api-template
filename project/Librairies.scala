@@ -36,6 +36,7 @@ object Librairies {
     "com.softwaremill.sttp.tapir"   %% "tapir-zio"               % tapirVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-zio-http4s-server" % tapirVersion,
     "com.softwaremill.sttp.tapir"   %% "tapir-refined"           % tapirVersion,
+    "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"        % tapirVersion,
     "com.softwaremill.sttp.shared"  %% "ws"                      % "1.2.5", //resolve a conflict between client3 and tapir
     "com.softwaremill.sttp.client3" %% "core"                    % "3.3.7" % Test,
     "com.softwaremill.sttp.client3" %% "httpclient-backend-zio"  % "3.3.7" % Test
@@ -47,12 +48,11 @@ object Librairies {
   )
 
   val json = Seq(
-    "io.circe"                    %% "circe-core"       % circeVersion,
-    "io.circe"                    %% "circe-generic"    % circeVersion,
-    "io.circe"                    %% "circe-parser"     % circeVersion,
-    "io.circe"                    %% "circe-refined"    % circeVersion,
-    "io.circe"                    %% "circe-testing"    % circeVersion % Test,
-    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion
+    "io.circe" %% "circe-core"    % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parser"  % circeVersion,
+    "io.circe" %% "circe-refined" % circeVersion,
+    "io.circe" %% "circe-testing" % circeVersion % Test
   )
 
   val logging = Seq(
