@@ -35,7 +35,6 @@ This is the list of technologies we chose to implement our requirements:
 - newtype (https://github.com/estatico/scala-newtype) for generating value objects with no runtime cost, APL v2 license
 - sbt-native-packager (https://sbt-native-packager.readthedocs.io) for docker image generation, BSD-2-Clause License
 
-
 ## Development flow
 
 - create branches from main
@@ -43,14 +42,6 @@ This is the list of technologies we chose to implement our requirements:
 - tag main to release Prod via Github action
 
 The stack is deployed on Google Cloud (Cloud Run + Cloud SQL)
-
-
-## Database
-The database layer is written via [skunk](https://tpolecat.github.io/skunk/index.html) (using native postgres, not jdbc)
-
-The database is hosted at CloudSQL. It can only be accessed via the CloudSQL proxy, behind the VPC, or by whitelisting an ip.
-
-We use the VPC option (the proxy option does not fit well with Skunk config model)
 
 
 ## Migration
