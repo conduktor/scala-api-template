@@ -25,6 +25,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("fix", "; all compile:scalafix test:scalafix; all scalafmtSbt scalafmtAll")
 addCommandAlias("check", "; scalafmtSbtCheck; scalafmtCheckAll; compile:scalafix --check; test:scalafix --check")
 addCommandAlias("updates", ";dependencyUpdates; reload plugins; dependencyUpdates; reload return")
+addCommandAlias("migrate-apply", "runMain io.conduktor.api.ApiMigrationApp")
 
 // ### Modules ###
 
@@ -56,35 +57,5 @@ lazy val api =
       buildInfoObject := "BuildInfo",
       Revolver.enableDebugging(),
       libraryDependencies ++=
-        effect ++ db ++ http ++ json ++ logging ++ configurations ++ apiDocs ++ jwt ++ refined ++ Seq(newtype, flyway) ++ dbTestingStack
+        effect ++ db ++ http ++ json ++ logging ++ configurations ++ apiDocs ++ jwt ++ refined ++ Seq(newtype) ++ flyway ++ dbTestingStack
     )
-
-// ### sbt tasks ###
-
-// MIGRATION
-val prisma = inputKey[Unit]("Database migration task.")
-prisma := {
-  // get the result of parsing
-  val args: Seq[String] = spaceDelimited("<arg>").parsed
-
-  val res = args match {
-    case Seq("create")                   =>
-      println("Creating migration SQL file...")
-      MigrationCommands.createMigration
-    case Seq("apply", "dev")             =>
-      println("Applying migrations to dev database...")
-      MigrationCommands.applyMigrationDev
-    case Seq("apply", "prod", "--force") =>
-      println("Applying migrations to prod database...")
-      MigrationCommands.applyProd_danger
-    case Seq("status")                   =>
-      println("Fetching migration status...")
-      MigrationCommands.getMigrationStatus
-    case Seq("validate")                 =>
-      println("Validating schema...")
-      MigrationCommands.validateSchema
-    case _                               => "Unknown command"
-  }
-  println(res)
-}
-addCommandAlias("migration", ";prisma")

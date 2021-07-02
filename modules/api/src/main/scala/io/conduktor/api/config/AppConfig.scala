@@ -13,7 +13,8 @@ final case class DBConfig(
   database: String,
   maxPoolSize: Int,
   gcpInstance: Option[String],
-  ssl: Boolean = false
+  ssl: Boolean = false,
+  dbMigration: Boolean = false
 )
 
 object DBConfig {
@@ -27,7 +28,8 @@ object DBConfig {
         string("DB_DATABASE") |@|
         int("DB_MAX_POOL_SIZE") |@|
         string("INSTANCE_CONNECTION_NAME").optional |@|
-        boolean("DB_USE_SSL").default(false)
+        boolean("DB_USE_SSL").default(false) |@|
+        boolean("DB_MIGRATION").default(false)
     )(DBConfig.apply, DBConfig.unapply)
 
   val layer: ZLayer[system.System, ReadError[String], Has[DBConfig]] = ZConfig.fromSystemEnv(dbConfig)
