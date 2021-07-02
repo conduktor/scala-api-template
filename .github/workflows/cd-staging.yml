@@ -32,7 +32,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          sbt docker:publish
+          sbt api / Docker / publish
         env:
           DOCKER_PACKAGE: ${{ secrets.GCP_PROJECT_ID }}/api-template
 
