@@ -1,0 +1,184 @@
+= Scala Api Template @ Conduktor
+
+== Conduktor dev team principles
+
+Conduktor dev team is composed of very experienced people cumulating decades of Scala practice.
+
+We picked Scala as the main language for our professional careers because it features or enable a lot of
+characteristics we value.
+
+=== Functional programming
+
+We won't cover here the reasons why FP is the best way to write surprise-less robust software as arguments
+are well-know to the community. As our team has the required knowledge to use this paradigm, we of course want
+our applications to leverage FP.
+
+=== Reactive Systems
+
+Conduktor DNA is Kafka expertise. We are convinced that modern software architectures have to be built around
+streaming. It's true for inter applications communication but also internally.
+
+=== Type Safety
+
+We love Scala for its very good type system: it allows us to write very expressive code that is ready for changes
+and limit the testing effort to ensure it behaves as expected (if you are not convinced, watch
+https://www.youtube.com/watch?v=apu-J0msaiY["Types vs Tests" by Julien Truffaut])
+
+To use the full potential of Scala type system, we define value objects and ban primitives as much as we can.
+
+=== Domain Driven Design
+
+We like what DDD and its ecosystem brought to our field: Ubiquitous Language, Entity/Value Object dichotomy,
+Hexagonal Architecture, etc.
+
+We thus try to use these concepts whenever it makes sense for us, with support from our tools.
+
+=== Testing
+
+We are serious about software: we don't want to rush fixing production bugs or deceive our customers with buggy
+products.
+
+That's why we try to cover our applications with tests at various layers:
+* domain logic tests
+* repository tests
+* APIs tests
+* various combination of integration tests
+* end 2 end tests, from API calls to database
+
+We try to have strong guarantees while having a decently fast testsuite by writing tests respecting the famous
+pyramid of test principle.
+
+=== Documentation
+
+As libs or services consumers, we like well-written documentations. As we are ourselves libs and services provides,
+we intend to provide the right level of information for our users.
+
+== Technologies we like
+
+Now that our principles are clear, we'll talk about how we reach these goals using technologies.
+
+=== Effect System, FP and type safety: ZIO to the rescue
+
+We believe that https://zio.dev[ZIO] is the best solution to write pure FP in scala nowadays. At least it's what we are the most
+comfortable with.
+
+To fulfil other requirements, we usually consider only libraries that fit well with ZIO whether ZIO native ones or
+providing integration with it.
+
+=== Data persistence: welcome back SQL
+
+As NoSQL trend is over and people now know that working with such database is hard, a lot of people are considering
+using SQL databases again by default.
+
+It doesn't mean that we dislike NoSQL but to be honest, for most projects, a good old Postgres server will make your
+life so much easier that the prospect of having scalability issues one day does not take the decision.
+
+However, performance is still a concern, so we don't want to use a blocking jdbc driver. We decided to go with
+Rob Norris's https://tpolecat.github.io/skunk/[skunk library] for that matter.
+
+Finally, to manage our database schema, we picked https://flywaydb.org/[flyway].
+
+=== RESTful API: Code First
+
+Everyone wants a nice OpenAPI documentation but there are a lot of way to build it.
+
+A very strong argument of using Scala and typing everything is: the code and the doc are actually so close that
+the generation from the code is really decent and efforts done to have a good documentation also enhance the
+code directly.
+
+It's why we decided to use https://tapir.softwaremill.com[tapir]. Of course, it's also well integrated with ZIO,
+which make our life easier.
+
+=== And the toolbox
+
+There are always a bunch of tools that solve well defined problems like JSON serialization, creation of zero-cost
+value objects, etc.
+
+Here is our shopping list:
+
+* https://circe.github.io/circe/[circe] for JSON because we love type safety
+* auth0 jwks-rsa library for JWT validation
+* https://github.com/fthomas/refined[refined] for declarative primitive refinements
+* https://github.com/estatico/scala-newtype[newtype] for zero-cost value objects
+* https://sbt-native-packager.readthedocs.io[sbt-native-packager] for generating a docker image
+* https://http4s.org/[http4s] for HTTP implementation
+* https://www.testcontainers.org/[testcontainers] for running a real Postgres server during tests
+
+== Why we built this template
+
+Why build a template instead of just creating our project straight away? Well, there are many reasons.
+
+=== Reaching a team consensus
+
+First, we all have different experiences and tastes. Two people would certainly pick two different sets of
+technologies and would choose different tests strategies. It's the kind of topic that are hard to debate while
+implementing a product. It's why we decided to discuss these choices on a sample project that would be as small
+as possible while implementing every aspect of our real-world products.
+
+With this strategy, it's easy to benchmark two solutions by creating a PR on the project and to reach a team consensus.
+
+=== Initial setup is often overlooked
+
+As much as we try to pick ZIO-friendly libs, the cost of putting everything together and have a working prototype
+is far from small. We don't really want to pay this price during the implementation of a feature. It's less stressful
+to handle that into a dedicated project with some dedicated tasks.
+
+=== We are growing fast
+
+As the company is growing really fast and will probably continue that way, it's important to spread knowledge into
+the current team and to make the knowledge easily reachable for new hires.
+
+Once again, it's easier to learn from a project with a handful of classes with a trivial domain than having to learn
+a new domain and new technologies at the same time.
+
+You can think of this template as guidelines defining how we code at Conduktor.
+
+=== We will have many projects
+
+We are not microservices fans, we will keep our domains in a modular monolith in a monorepo as long as it's doable.
+
+But at some point, we'll need to have several projects with their own lifecycle.
+
+This template will be kept up-to-date with our practices and technologies to ensure new projects can start with the
+same strategies.
+
+=== Experiment is cheaper on a small codebase
+
+As time pass, we will want to update libs, replace them or include new ones. We will probably also want to migrate
+from a Scala version to another. Trying these changes on a small codebase using the same techs as our productions
+apps will be a huge benefit as the cost involved in a proof-of-concept will be quite small. It will be somehow our
+sandbox to try new things.
+
+=== Be useful to our Scala community and get feedback
+
+All that is hard work. To be honest, we read a lot of communities template projects and code snippets to build this
+template, your hard work. And we think we can give back to the community because on some topics, we think we added
+value on some topics and that the result is not yet available as-is in the ecosystem.
+
+Maybe it will be useful to others. Maybe it can inspire people.
+
+And maybe people will hate what we did, and it's ok too.
+
+Whatever you will say, we are eager to listen to your feedback because we want to learn from the community.
+
+== Limitations
+
+That's one of the best section of every documentation: after reading the marketing stuff, all good software developers
+go straight to the limitation section, isn't it?
+
+Here is a list of things you need to know about this template:
+
+* Postgres won't scale infinitely, don't take it for your 1M req/s project
+* It implements neither CQRS nor Event Sourcing: these patterns are awesome but require a lot of very specific
+knowledge that are not so common in the industry
+* Skunk, our Postgres access library is still very young
+* We like Kafka but we don't include Kafka support in this template: we will add Kafka support in the future, we are
+just not there yet
+* There's no metrics yet, making it not very ready for production
+
+== Conclusion
+
+The code is https://github.com/conduktor/scala-api-template[here], if you consider writing a Scala application and
+you share some of our principles, it's probably a good idea to read it.
+
+We hope you will enjoy what you read. Maybe you will want to join us?
