@@ -18,7 +18,7 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
 
     override def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post] = Task {
       db(id) = Post(
-        id = id,
+        id = Post.Id(id),
         title = title,
         author = User(author),
         published = false,

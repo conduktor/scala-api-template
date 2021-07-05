@@ -29,7 +29,7 @@ private object PostDb {
 
   def toDomain(p: PostDb): Post =
     Post(
-      id = p.id,
+      id = Post.Id(p.id),
       title = Post.Title(p.title),
       author = User(name = p.author),
       published = p.published,

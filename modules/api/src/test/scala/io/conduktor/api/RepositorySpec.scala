@@ -32,7 +32,7 @@ object RepositorySpec {
           actual <- repo.findPostById(id)
         } yield assert(actual)(
           equalTo(
-            Post(id = id, title = Post.Title("hello"), author = User(UserName("bob")), published = false, content = Post.Content("testing"))
+            Post(id = Post.Id(id), title = Post.Title("hello"), author = User(UserName("bob")), published = false, content = Post.Content("testing"))
           )
         )
       }
