@@ -18,7 +18,7 @@ We love Scala for its very good type system: It allows us to write very expressi
 and only needs limited amounts of testing to ensure it behaves as expected. Not convinced? Watch
 https://www.youtube.com/watch?v=apu-J0msaiY["Types vs Tests" by Julien Truffaut]
 
-We utilize the full potential of a Scala type system by defining value objects and banning primitives as much as possible.
+We utilize the full potential of a Scala type system by defining value objects and banning primitive types as much as possible.
 
 === Domain Driven Design
 
