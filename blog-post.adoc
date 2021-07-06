@@ -18,7 +18,7 @@ We love Scala for its very good type system: It allows us to write very expressi
 and only needs limited amounts of testing to ensure it behaves as expected. Not convinced? Watch
 https://www.youtube.com/watch?v=apu-J0msaiY["Types vs Tests" by Julien Truffaut]
 
-We utilize the full potential of a Scala type system by defining value objects and banning primitive types as much as possible.
+We utilize the full potential of the Scala type system by defining value objects and banning primitive types as much as possible.
 
 === Domain Driven Design
 
@@ -30,7 +30,7 @@ We try to use these concepts whenever it makes sense for us, with support from o
 === Testing
 
 We are serious about software. We never want to rush to fix production bugs or give our customers buggy products so
-we do extensive testing.
+we do write extensive test suites.
 
 Our applications goes through tests at various layers:
 * domain logic tests
@@ -39,7 +39,7 @@ Our applications goes through tests at various layers:
 * various combination of integration tests
 * end 2 end tests, from API calls to database
 
-We get a strong and fast testsuite by writing tests respecting the famous pyramid of test principles.
+We get a strong and fast testsuite by writing tests respecting the famous pyramid of test principle.
 
 === Documentation
 
@@ -60,7 +60,8 @@ has a ZIO integration.
 
 === Data persistence: welcome back SQL
 
-During the NoSQL trend, SQL evolved and more and more people are considering SQL databases again by default. So do we.
+During the NoSQL trend, SQL implementations got better and we learnt that NoSQL databases drive development cost higher,
+thus more and more people are considering SQL databases again by default. So do we.
 This doesn't mean that we dislike NoSQL but to be honest, for most projects, a good old Postgres server will make your
 life so much easier.
 
