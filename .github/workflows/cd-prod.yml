@@ -37,7 +37,6 @@ jobs:
           sbt "api / Docker / publish"
         env:
           DOCKER_PACKAGE: ${{ secrets.GCP_PROJECT_ID }}/api-template-prod
-          DOCKER_PACKAGE_VERSION: ${{ env.RELEASE_TAG }}
 
       - name: Deploy Cloud Run
         run: |
