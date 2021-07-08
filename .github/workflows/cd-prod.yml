@@ -8,8 +8,6 @@ on:
 jobs:
   cd:
     runs-on: ubuntu-latest
-    env:
-      RELEASE_TAG: ${GITHUB_REF##*/}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -17,6 +15,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.11
+
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF##*/}
 
       - name: Run tests
         run: sbt clean test
@@ -37,12 +39,12 @@ jobs:
           sbt "api / Docker / publish"
         env:
           DOCKER_PACKAGE: ${{ secrets.GCP_PROJECT_ID }}/api-template-prod
-
+          RELEASE_TAG: ${{ steps.get_version.outputs.VERSION }}
       - name: Deploy Cloud Run
         run: |
           gcloud run deploy api-template-prod \
           --region europe-west1 \
-          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:${{ env.RELEASE_TAG }} \
+          --image eu.gcr.io/${{ secrets.GCP_PROJECT_ID }}/api-template-prod:${{ steps.get_version.outputs.VERSION }} \
           --platform managed \
           --allow-unauthenticated \
           --cpu 1000m --memory 512Mi --max-instances 1 \
