@@ -12,6 +12,7 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.ztapir._
 import zio._
+import zio.random.Random
 
 import java.util.UUID
 
@@ -29,7 +30,7 @@ object PostDTO {
 
   def from(p: Post): PostDTO =
     PostDTO(
-      id = p.id,
+      id = p.id.value,
       title = p.title.value,
       author = p.author.name,
       published = p.published,
@@ -45,21 +46,24 @@ object CreatePostInput {
 
 object PostRoutes {
 
-  type Env = Has[AuthService] with Has[PostService]
+  type Env = Has[AuthService] with Has[PostService] with Random
 
   private def serverError(defaultMessage: => String)(error: Throwable): ServerError =
     ServerError(Option(error.getMessage).getOrElse(defaultMessage))
 
-  private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[Has[PostService], ErrorInfo, PostDTO] =
-    ZIO.serviceWith[PostService](_.createPost(user, Post.Title(post.title), Post.Content(post.content)))
+  private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[Has[PostService] with Random, ErrorInfo, PostDTO] =
+    (for {
+      service <- ZIO.service[PostService]
+      created <- service.createPost(user, Post.Title(post.title), Post.Content(post.content))
+    } yield created)
       .bimap(handleCreatePostError, PostDTO.from)
 
   private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ServerError, Unit] =
-    ZIO.serviceWith[PostService](_.deletePost(id))
+    ZIO.serviceWith[PostService](_.deletePost(Post.Id(id)))
       .mapError(serverError(s"Error deleting post $id"))
 
   private def getPostByIdServerLogic(id: UUID): ZIO[Has[PostService], ServerError, PostDTO] =
-    ZIO.serviceWith[PostService](_.findById(id))
+    ZIO.serviceWith[PostService](_.findById(Post.Id(id)))
       .bimap(serverError(s"Error finding post $id"), PostDTO.from)
 
   private def allPostsServerLogic: ZIO[Has[PostService], ServerError, List[PostDTO]] =
@@ -104,10 +108,10 @@ object PostRoutes {
         .serverLogic(_ => allPostsServerLogic)
 
     val all = List(
-      createPostEndpoint,
-      deletePostEndpoint,
-      getPostByIdEndpoint,
-      allPostsEndpoint
+      createPostEndpoint.widen[Env],
+      deletePostEndpoint.widen[Env],
+      getPostByIdEndpoint.widen[Env],
+      allPostsEndpoint.widen[Env]
     )
 
   }

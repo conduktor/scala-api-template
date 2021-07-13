@@ -13,34 +13,38 @@ import sttp.client3._
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import sttp.model.StatusCode
 import zio.magic._
+import zio.random.Random
 import zio.test.Assertion.{containsString, equalTo, isRight}
 import zio.test.TestAspect.sequential
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
-import zio.{Function0ToLayerSyntax, Has, IO, RLayer, Task, TaskLayer, ULayer, ZIO, ZLayer}
+import zio.{Function0ToLayerSyntax, Has, RLayer, Task, TaskLayer, ULayer, ZIO, ZLayer}
 
-import java.util.UUID
 import scala.collection.mutable
 
 private class Stub extends PostService {
-  private val posts = mutable.Map.empty[UUID, Post]
+  private val posts = mutable.Map.empty[Post.Id, Post]
 
-  override def createPost(user: User, title: Post.Title, content: Post.Content): IO[PostService.CreatePostError, Post] = IO.succeed {
-    val id = UUID.randomUUID()
-
-    posts(id) = Post(
-      id = id,
-      title = title,
-      author = user,
-      published = false,
-      content = content
-    )
-    posts(id)
+  override def createPost(user: User, title: Post.Title, content: Post.Content): ZIO[Random, PostService.CreatePostError, Post] = {
+    for {
+      random <- ZIO.service[Random.Service]
+      uuid <- random.nextUUID
+    } yield {
+      val id = Post.Id(uuid)
+      posts(id) = Post(
+        id = id,
+        title = title,
+        author = user,
+        published = false,
+        content = content
+      )
+      posts(id)
+    }
   }
 
-  override def deletePost(uuid: UUID): Task[Unit] = Task(posts.remove(uuid)).unit
+  override def deletePost(uuid: Post.Id): Task[Unit] = Task(posts.remove(uuid)).unit
 
-  override def findById(uuid: UUID): Task[Post] = Task(posts(uuid))
+  override def findById(uuid: Post.Id): Task[Post] = Task(posts(uuid))
 
   override def all: Task[List[Post]] = Task(posts.values.toList)
 }

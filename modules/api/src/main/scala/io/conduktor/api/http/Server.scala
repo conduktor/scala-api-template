@@ -27,7 +27,7 @@ object RoutesInterpreter {
 
   val endpoints: List[ZServerEndpoint[Env, _, _, _]] =
     HealthRoutes.Endpoints.all.map(_.widen[Env]) ++
-  PostRoutes.Endpoints.all.map(_.widen[Env])
+  PostRoutes.Endpoints.all
 
   val routes: HttpRoutes[RIO[Env with Clock, *]] =
     ZHttp4sServerInterpreter
