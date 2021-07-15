@@ -173,4 +173,4 @@ just not there yet
 The code is https://github.com/conduktor/scala-api-template[here], if you consider writing a Scala application and
 you share some of our principles, it's probably a good idea to read it.
 
-If you liked what you just read, maybe you will want to join us?
+If you liked what you just read, maybe you want to join us?
