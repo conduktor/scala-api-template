@@ -1,8 +1,6 @@
 # scala-api-template
 
-A template for writing Restful APIs we'll use at Conduktor.
-It's supposed to work with this template of Front-end: https://github.com/conduktor/react-app-template.
-
+A template for writing Restful APIs we use at Conduktor.
 
 ## Requirements 
 
@@ -47,22 +45,21 @@ The stack is deployed on Google Cloud (Cloud Run + Cloud SQL)
 ## Migration
 Database provisioning / migration is done via [flyway](https://flywaydb.org/)
 
-When respecting the flyway convention, the migration will apply on test database and at application start to ensure
-the database is up-to-date with current running code.
+The migrations are applied at application start to ensure the database is up-to-date with current running code.
 
 
 ## Auth
 
 Auth is a JWT validation + data extraction, against an auth0 tenant.
 
-We retrieve the exposed public key from auth0, and use it to validate et decode the token provided by the frontend as a Bearer Authorization header
+We retrieve the exposed public key from auth0, and use it to validate and decode the bearer token provided in the authorization header 
 
 
 ## ISSUES
 
- - Intellij can't type properly macros (such as skunk's "sql" StringOps),
+ - Intellij can't type properly skunk's "sql" StringOps macro,
 using Metals is therefore recommended when dealing with repositories
 
 ## TODOS
-- domain-specific error fmk
-- streaming endpoints (paginated, websocket)
+- use domain-specific errors
+- add streaming endpoints examples (paginated, websocket)
