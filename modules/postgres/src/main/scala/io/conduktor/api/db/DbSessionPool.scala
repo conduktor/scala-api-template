@@ -1,8 +1,9 @@
-package io.conduktor.api.repository.db
+package io.conduktor.api.db
 
 import io.conduktor.api.config.DBConfig
 import natchez.Trace.Implicits.noop
 import skunk.{SSL, Session, Strategy}
+
 import zio.interop.catz._
 import zio.{Has, Runtime, Task, TaskManaged, ZLayer, ZManaged}
 
@@ -22,7 +23,7 @@ object DbSessionPool {
                       port = conf.port,
                       user = conf.user,
                       database = conf.database,
-                      password = conf.password,
+                      password = conf.password.map(_.unwrapValue),
                       max = conf.maxPoolSize,
                       strategy = Strategy.SearchPath,
                       ssl = if (conf.ssl) SSL.Trusted else SSL.None
