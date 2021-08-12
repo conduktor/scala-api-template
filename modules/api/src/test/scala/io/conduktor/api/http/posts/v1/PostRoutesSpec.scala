@@ -16,6 +16,8 @@ import sttp.client3._
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import sttp.model.StatusCode
 
+import zio.blocking.Blocking
+import zio.clock.Clock
 import zio.magic._
 import zio.random.Random
 import zio.test.Assertion.{containsString, equalTo, isRight}
@@ -23,9 +25,6 @@ import zio.test.TestAspect.sequential
 import zio.test._
 import zio.test.environment.TestEnvironment
 import zio.{Function0ToLayerSyntax, Has, RLayer, Task, TaskLayer, ULayer, ZIO, ZLayer}
-import sttp.capabilities.WebSockets
-import zio.blocking.Blocking
-import zio.clock.Clock
 
 private class Stub extends PostService {
   private val posts = mutable.Map.empty[Post.Id, Post]
@@ -68,7 +67,7 @@ object PostRoutesSpec extends DefaultRunnableSpec {
   val commonLayers
     : ZLayer[Has[Clock.Service] with Has[zio.console.Console.Service] with Has[zio.system.System.Service] with Has[Random.Service] with Has[
       Blocking.Service
-    ] with Has[PostService], Throwable, Has[SttpBackend[ZIO[Any, Throwable, A], ZioStreams with WebSockets]] with Has[Server]] =
+    ] with Has[PostService], Throwable, Has[HttpClient] with Has[Server]] =
     ZLayer.fromSomeMagic[zio.ZEnv with Has[PostService], Env](
       httpClient,
       dummyAuth,

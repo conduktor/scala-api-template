@@ -1,8 +1,11 @@
-package io.conduktor.api.migration
+package io.conduktor.api.db
 
-import zio._
+import scala.util.chaining.scalaUtilChainingOps
+
 import io.conduktor.api.config.DBConfig
 import org.flywaydb.core.Flyway
+
+import zio._
 
 trait DatabaseMigrationService {
   def migrate(): Task[Unit]
@@ -17,7 +20,17 @@ final class FlywayDatabaseMigrationService(config: DBConfig) extends DatabaseMig
   def migrate(): Task[Unit] = Task {
     Flyway
       .configure()
-      .dataSource(s"jdbc:postgresql://${config.host}:${config.port}/${config.database}", config.user, config.password.orNull)
+      .dataSource(
+        s"jdbc:postgresql://${config.host}:${config.port}/${config.database}",
+        config.user,
+        config.password.map(_.unwrapValue).orNull
+      )
+      .pipe(fw =>
+        config.baselineVersion.fold(fw)(
+          fw.baselineOnMigrate(true)
+            .baselineVersion(_)
+        )
+      )
       .load()
       .migrate()
   }.unit
