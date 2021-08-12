@@ -1,7 +1,7 @@
 package io.conduktor.api.repository
 
 import io.conduktor.api.model.Post
-import io.conduktor.api.types.UserName
+import io.conduktor.primitives.types.UserName
 import zio.{Has, Task, ZIO}
 
 import java.util.UUID

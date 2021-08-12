@@ -2,8 +2,8 @@ package io.conduktor.api.model
 
 import cats.Show
 import eu.timepit.refined.types.string.NonEmptyString
-import io.conduktor.api.auth.User
 import io.conduktor.api.model.Post.{Content, Id, Title}
+import io.conduktor.primitives.types.UserName
 import io.estatico.newtype.macros.newtype
 
 import java.util.UUID
@@ -11,7 +11,7 @@ import java.util.UUID
 final case class Post(
   id: Id,
   title: Title,
-  author: User,
+  author: UserName,
   published: Boolean,
   content: Content
 )
@@ -24,4 +24,5 @@ object Post {
     implicit final val show: Show[Title] = deriving
   }
   @newtype case class Content(value: String)
+
 }

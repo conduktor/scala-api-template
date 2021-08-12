@@ -1,9 +1,8 @@
-package io.conduktor.api
+package io.conduktor.api.db
 
-import io.conduktor.api.auth.User
 import io.conduktor.api.model.Post
 import io.conduktor.api.repository.PostRepository
-import io.conduktor.api.types.UserName
+import io.conduktor.primitives.types.UserName
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec}
 import zio.{Has, Task, ULayer, ZIO}
@@ -20,7 +19,7 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
       db(id) = Post(
         id = Post.Id(id),
         title = title,
-        author = User(author),
+        author = author,
         published = false,
         content = content
       )

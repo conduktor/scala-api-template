@@ -1,7 +1,7 @@
-package io.conduktor.api
+package io.conduktor.api.db
 
-import io.conduktor.api.repository.db.DbSessionPool.SessionTask
-import io.conduktor.api.repository.db.{DbPostRepository, DbSessionPool}
+import io.conduktor.api.db.DbSessionPool.SessionTask
+import io.conduktor.api.repository.db.DbPostRepository
 import skunk.implicits.toStringOps
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec}
@@ -11,7 +11,8 @@ object DbRepositorySpec extends DefaultRunnableSpec {
 
   private def initTables(x: Has[TaskManaged[SessionTask]]) =
     x.get.use { session =>
-      session.execute(sql"""
+      session.execute(
+        sql"""
 CREATE TABLE "post" (
 "id" UUID NOT NULL,
 "title" TEXT NOT NULL,
@@ -24,7 +25,7 @@ PRIMARY KEY ("id")
 )""".command)
     }
 
-  val repoLayer = (BootstrapPostgres.pgLayer >>> DbSessionPool.layer.tap(initTables) >>> DbPostRepository.layer).orDie
+  val repoLayer = (EmbeddedPostgres.pgLayer >>> DbSessionPool.layer.tap(initTables) >>> DbPostRepository.layer).orDie
 
   override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "database").provideCustomLayer(repoLayer)
 

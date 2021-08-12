@@ -1,15 +1,15 @@
 package io.conduktor.api.service
 
-import io.conduktor.api.auth.User
 import io.conduktor.api.model.Post
 import io.conduktor.api.model.Post.{Content, Title}
 import io.conduktor.api.repository.PostRepository
 import io.conduktor.api.service.PostService.{CreatePostError, DuplicatePostError, TechnicalPostError}
+import io.conduktor.primitives.types.{Email, UserName}
 import zio._
 import zio.random.Random
 
 trait PostService {
-  def createPost(user: User, title: Title, content: Content): ZIO[Random, CreatePostError, Post]
+  def createPost(author: UserName, title: Title, content: Content): ZIO[Random, CreatePostError, Post]
 
   def deletePost(id: Post.Id): Task[Unit]
 
@@ -22,20 +22,21 @@ object PostService {
   sealed trait PostServiceError
 
   sealed trait CreatePostError                              extends PostServiceError
+  final case class InvalidEmail(email: Email)         extends CreatePostError
   final case class DuplicatePostError(title: Title)         extends CreatePostError
   final case class TechnicalPostError(throwable: Throwable) extends CreatePostError
 }
 
 final class PostServiceLive(db: PostRepository) extends PostService {
 
-  override def createPost(user: User, title: Title, content: Content): ZIO[Random, CreatePostError, Post] =
+  override def createPost(author: UserName, title: Title, content: Content): ZIO[Random, CreatePostError, Post] =
     for {
       random    <- ZIO.service[Random.Service]
       id        <- random.nextUUID
       maybePost <- db.findPostByTitle(title).mapError(TechnicalPostError)
       post      <- maybePost match {
                      case Some(_) => ZIO.fail(DuplicatePostError(title))
-                     case None    => db.createPost(id, title, user.name, content).mapError(TechnicalPostError)
+                     case None    => db.createPost(id, title, author, content).mapError(TechnicalPostError)
                    }
     } yield post
 

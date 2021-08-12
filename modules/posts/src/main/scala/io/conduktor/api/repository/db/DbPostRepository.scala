@@ -1,11 +1,10 @@
 package io.conduktor.api.repository.db
 
 import eu.timepit.refined.types.string.NonEmptyString
-import io.conduktor.api.auth.User
+import io.conduktor.api.db.DbSessionPool.SessionTask
 import io.conduktor.api.model.Post
 import io.conduktor.api.repository.PostRepository
-import io.conduktor.api.repository.db.DbSessionPool.SessionTask
-import io.conduktor.api.types.UserName
+import io.conduktor.primitives.types.UserName
 import skunk.codec.all._
 import skunk.implicits._
 import skunk.{Codec, Command, Fragment, Query}
@@ -25,13 +24,13 @@ private[db] final case class PostDb(
 )
 private object PostDb {
   private[db] val codec: Codec[PostDb] =
-    (uuid ~ nonEmptyText ~ UserName.codec ~ text ~ bool ~ createdAt).gimap[PostDb]
+    (uuid ~ nonEmptyText ~ usernameCodec ~ text ~ bool ~ createdAt).gimap[PostDb]
 
   def toDomain(p: PostDb): Post =
     Post(
       id = Post.Id(p.id),
       title = Post.Title(p.title),
-      author = User(name = p.author),
+      author = p.author,
       published = p.published,
       content = Post.Content(p.content)
     )
@@ -54,7 +53,7 @@ final class DbPostRepository(session: TaskManaged[SessionTask]) extends PostRepo
     def postCreate: Query[(UUID, NonEmptyString, UserName, String), PostDb] =
       sql"""
         INSERT INTO post (id, title, author, content)
-        VALUES ($uuid, $nonEmptyText, ${UserName.codec}, $text)
+        VALUES ($uuid, $nonEmptyText, ${usernameCodec}, $text)
         RETURNING $fullPostFields
       """
         .query(PostDb.codec)
@@ -90,6 +89,6 @@ final class DbPostRepository(session: TaskManaged[SessionTask]) extends PostRepo
 
 object DbPostRepository {
 
-  val layer: URLayer[Has[TaskManaged[DbSessionPool.SessionTask]], Has[PostRepository]] = (new DbPostRepository(_)).toLayer
+  val layer: URLayer[Has[TaskManaged[SessionTask]], Has[PostRepository]] = (new DbPostRepository(_)).toLayer
 
 }
