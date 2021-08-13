@@ -3,7 +3,6 @@ import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport._
 import sbt.Keys._
 import sbt._
 
-
 object BuildHelper {
 
   val commonSettings = Seq(
@@ -23,8 +22,7 @@ object BuildHelper {
     dockerUpdateLatest := true,
     dockerExposedPorts := Seq(8080),
     dockerBaseImage := "adoptopenjdk/openjdk11:alpine-jre"
-  ) ++ sys.env.get("RELEASE_TAG").map(v =>  Seq(Docker / version := v)).getOrElse(Seq.empty)
-
+  ) ++ sys.env.get("RELEASE_TAG").map(v => Seq(Docker / version := v)).getOrElse(Seq.empty)
 
   lazy val noDoc = Seq(
     (Compile / doc / sources) := Seq.empty,

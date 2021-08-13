@@ -1,6 +1,5 @@
 import BuildHelper._
 import Librairies._
-import complete.DefaultParsers._
 import sbtbuildinfo.BuildInfoKey
 import sbtbuildinfo.BuildInfoPlugin.autoImport.BuildInfoKey
 
@@ -41,9 +40,42 @@ lazy val root =
   Project(id = "scala-api-template", base = file("."))
     .disablePlugins(RevolverPlugin)
     .settings(noDoc: _*)
-    .aggregate(api)
+    .aggregate(api, auth, postgres, common)
 
-lazy val api =
+lazy val auth = project
+  .in(file("modules/auth"))
+  .disablePlugins(RevolverPlugin)
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= jwt ++ effect ++ json ++ logging)
+  .dependsOn(common)
+
+lazy val common = project
+  .in(file("modules/common"))
+  .disablePlugins(RevolverPlugin)
+  .settings(commonSettings: _*)
+  .settings(
+    libraryDependencies ++= refined ++ Seq(newtype)
+  )
+
+lazy val postgres = project
+  .in(file("modules/postgres"))
+  .disablePlugins(RevolverPlugin)
+  .settings(commonSettings: _*)
+  .settings(
+    name := "Postgres",
+    description := "Postgres support domain, containing code to use postgresql",
+    libraryDependencies ++= effect ++ logging ++ dbTestingStack ++ db ++ flyway
+  )
+  .dependsOn(common)
+
+lazy val posts = project
+  .in(file("modules/posts"))
+  .disablePlugins(RevolverPlugin)
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= jwt ++ effect ++ logging ++ refined)
+  .dependsOn(common, postgres % "compile->compile;test->test")
+
+lazy val api   =
   project
     .in(file("modules/api"))
     .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin, AshScriptPlugin)
@@ -57,5 +89,6 @@ lazy val api =
       buildInfoObject := "BuildInfo",
       Revolver.enableDebugging(),
       libraryDependencies ++=
-        effect ++ db ++ http ++ json ++ logging ++ configurations ++ apiDocs ++ jwt ++ refined ++ Seq(newtype) ++ flyway ++ dbTestingStack
+        effect ++ http ++ json ++ logging ++ configurations ++ apiDocs ++ jwt ++ client
     )
+    .dependsOn(auth, posts % "compile->compile;test->test", common, postgres % "test->test")
