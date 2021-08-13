@@ -18,21 +18,21 @@ import sttp.model.StatusCode
 
 import zio.blocking.Blocking
 import zio.clock.Clock
+import zio.logging.Logging
 import zio.magic._
 import zio.random.Random
 import zio.test.Assertion.{containsString, equalTo, isRight}
 import zio.test.TestAspect.sequential
 import zio.test._
 import zio.test.environment.TestEnvironment
-import zio.{Function0ToLayerSyntax, Has, RLayer, Task, TaskLayer, ULayer, ZIO, ZLayer}
+import zio.{Has, IO, RLayer, Task, TaskLayer, UIO, URLayer, ZIO, ZLayer}
 
-private class Stub extends PostService {
+private class Stub(random: Random.Service) extends PostService {
   private val posts = mutable.Map.empty[Post.Id, Post]
 
-  override def createPost(author: UserName, title: Post.Title, content: Post.Content): ZIO[Random, PostService.CreatePostError, Post] =
+  override def createPost(author: UserName, title: Post.Title, content: Post.Content): IO[PostService.PostServiceError, Post] =
     for {
-      random <- ZIO.service[Random.Service]
-      uuid   <- random.nextUUID
+      uuid <- random.nextUUID
     } yield {
       val id = Post.Id(uuid)
       posts(id) = Post(
@@ -45,21 +45,21 @@ private class Stub extends PostService {
       posts(id)
     }
 
-  override def deletePost(uuid: Post.Id): Task[Unit] = Task(posts.remove(uuid)).unit
+  override def deletePost(uuid: Post.Id): IO[PostService.PostServiceError, Unit] = UIO(posts.remove(uuid)).unit
 
-  override def findById(uuid: Post.Id): Task[Post] = Task(posts(uuid))
+  override def findById(uuid: Post.Id): IO[PostService.PostServiceError, Post] = UIO(posts(uuid))
 
-  override def all: Task[List[Post]] = Task(posts.values.toList)
+  override def all: IO[PostService.PostServiceError, List[Post]] = UIO(posts.values.toList)
 }
 
 private object Stub {
-  val layer: ULayer[Has[PostService]] = (() => new Stub).toLayer
+  val layer: URLayer[Random, Has[PostService]] = (new Stub(_)).toLayer
 }
 
 object PostRoutesSpec extends DefaultRunnableSpec {
 
   type HttpClient = SttpBackend[Task, ZioStreams with capabilities.WebSockets]
-  type Env        = Has[HttpClient] with Has[Server]
+  type Env        = Has[HttpClient] with Has[Server] with Logging
   type Layer      = RLayer[zio.ZEnv, Env]
 
   val httpClient: TaskLayer[Has[HttpClient]] = HttpClientZioBackend().toLayer
@@ -72,25 +72,29 @@ object PostRoutesSpec extends DefaultRunnableSpec {
       httpClient,
       dummyAuth,
       randomPortHttpConfig,
-      Server.layer
+      Server.layer,
+      Logging.ignore
     )
 
   val dbLayers: Layer = ZLayer.fromSomeMagic[zio.ZEnv, Env](
     localDB,
     ApiTemplateApp.dbLayer,
     ApiTemplateApp.serviceLayer,
-    commonLayers
+    commonLayers,
+    Logging.ignore
   )
 
   val memoryLayer: Layer = ZLayer.fromSomeMagic[zio.ZEnv, Env](
     MemoryRepositorySpec.testLayer,
     ApiTemplateApp.serviceLayer,
-    commonLayers
+    commonLayers,
+    Logging.ignore
   )
 
   val stubServicesLayer: Layer = ZLayer.fromSomeMagic[zio.ZEnv, Env](
     Stub.layer,
-    commonLayers
+    commonLayers,
+    Logging.ignore
   )
 
   private final case class TestEnv(name: String, layer: Layer)

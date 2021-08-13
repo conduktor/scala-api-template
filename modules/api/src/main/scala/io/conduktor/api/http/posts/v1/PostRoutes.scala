@@ -4,12 +4,12 @@ import java.util.UUID
 
 import io.conduktor.api.auth.AuthService
 import io.conduktor.api.http.endpoints.secureEndpoint
-import io.conduktor.api.http.{BadRequest, Conflict, ErrorInfo, ServerError}
+import io.conduktor.api.http.{BadRequest, Conflict, ErrorInfo, NotFound, ServerError}
 import io.conduktor.api.model.{Post, User}
+import io.conduktor.api.repository.PostRepository.Error
 import io.conduktor.api.service.PostService
-import io.conduktor.api.service.PostService.{CreatePostError, InvalidEmail}
+import io.conduktor.api.service.PostService.{InvalidEmail, PostServiceError}
 import sttp.tapir.EndpointInput
-import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.ztapir._
 
@@ -30,29 +30,35 @@ object PostRoutes {
       userName <- ZIO.fromEither(user.email.getUserName).orElseFail(InvalidEmail(user.email))
       created  <- service.createPost(userName, Post.Title(post.title), Post.Content(post.content))
     } yield created)
-      .mapBoth(handleCreatePostError, PostDTO.from)
+      .mapBoth(handlePostServiceError(s"Error creating post with title ${post.title}"), PostDTO.from)
 
-  private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ServerError, Unit] =
+  private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ErrorInfo, Unit] =
     ZIO
       .serviceWith[PostService](_.deletePost(Post.Id(id)))
-      .mapError(serverError(s"Error deleting post $id"))
+      .mapError(handlePostServiceError(s"Error deleting post with id $id"))
 
-  private def getPostByIdServerLogic(id: UUID): ZIO[Has[PostService], ServerError, PostDTO] =
+  private def getPostByIdServerLogic(id: UUID): ZIO[Has[PostService], ErrorInfo, PostDTO] =
     ZIO
       .serviceWith[PostService](_.findById(Post.Id(id)))
-      .mapBoth(serverError(s"Error finding post $id"), PostDTO.from)
+      .mapBoth(handlePostServiceError(s"Error finding post $id"), PostDTO.from)
 
-  private def allPostsServerLogic: ZIO[Has[PostService], ServerError, List[PostDTO]] =
+  private def allPostsServerLogic: ZIO[Has[PostService], ErrorInfo, List[PostDTO]] =
     ZIO
       .serviceWith[PostService](_.all)
-      .mapBoth(serverError("Error listing posts"), _.map(PostDTO.from))
+      .mapBoth(handlePostServiceError("Error listing posts"), _.map(PostDTO.from))
 
-  private def handleCreatePostError(error: CreatePostError): ErrorInfo = {
+  private def handlePostServiceError(context: String)(error: PostServiceError): ErrorInfo = {
     import cats.syntax.show._
     error match {
-      case PostService.DuplicatePostError(title) => Conflict(show"A post already exists with the same title : $title.")
-      case PostService.TechnicalPostError(err)   => serverError("Failed to create post.")(err)
-      case InvalidEmail(email)                   => BadRequest(s"Invalid email ${email.value.value}")
+      case PostService.DuplicatePostError(title) =>
+        Conflict(show"$context. A post already exists with the same title : ${title.value.value}.")
+      case PostService.RepositoryError(err)      =>
+        err match {
+          case Error.PostNotFound(id) => NotFound(show"$context. No post found with id ${id.value}")
+          case Error.Unexpected(_)    => ServerError(show"$context. Unexpected repository error. Check the logs for more")
+        }
+      case PostService.Unexpected(err)           => serverError(show"$context. Unexpected service error.")(err)
+      case PostService.InvalidEmail(email)       => BadRequest(show"$context. Invalid email ${email.value.value}")
     }
   }
 

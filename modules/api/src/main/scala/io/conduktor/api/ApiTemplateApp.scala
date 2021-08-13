@@ -5,12 +5,12 @@ import io.conduktor.api.config.{AppConfig, Auth0Config, DBConfig}
 import io.conduktor.api.db.{DatabaseMigrationService, DbSessionPool, FlywayDatabaseMigrationService}
 import io.conduktor.api.http.Server
 import io.conduktor.api.repository.PostRepository
-import io.conduktor.api.repository.db.DbPostRepository
 import io.conduktor.api.service.{PostService, PostServiceLive}
 
 import zio.clock.Clock
 import zio.logging._
 import zio.logging.slf4j.Slf4jLogger
+import zio.random.Random
 import zio.{App, ExitCode, Has, RIO, RLayer, ULayer, URIO, ZIO, ZLayer}
 
 object ApiTemplateApp extends App {
@@ -28,9 +28,9 @@ object ApiTemplateApp extends App {
 
   val authLayer: RLayer[Has[Auth0Config] with Clock with Logging, Has[AuthService]] = JwtAuthService.layer
 
-  val dbLayer: RLayer[Has[DBConfig], Has[PostRepository]] = DbSessionPool.layer >>> DbPostRepository.layer
+  val dbLayer: RLayer[Has[DBConfig], Has[PostRepository.Pool]] = DbSessionPool.layer >>> PostRepository.Pool.live
 
-  val serviceLayer: RLayer[Has[PostRepository], Has[PostService]] = PostServiceLive.layer
+  val serviceLayer: RLayer[Has[PostRepository.Pool] with Random with Logging, Has[PostService]] = PostServiceLive.layer
 
   import zio.magic._
   private val env: RLayer[zio.ZEnv, AppEnv] =
