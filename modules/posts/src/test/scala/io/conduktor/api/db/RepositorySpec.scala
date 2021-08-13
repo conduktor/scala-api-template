@@ -19,15 +19,15 @@ object RepositorySpec {
         for {
           random <- ZIO.service[Random.Service]
           postId <- random.nextUUID.map(Post.Id.apply)
-          pool <- ZIO.service[PostRepository.Pool]
+          pool   <- ZIO.service[PostRepository.Pool]
           actual <- pool.use(repo =>
-            repo.createPost(
-              id = postId,
-              title = Post.Title("hello"),
-              author = UserName("bob"),
-              content = Post.Content("testing")
-            ) *> repo.findPostById(postId)
-          )
+                      repo.createPost(
+                        id = postId,
+                        title = Post.Title("hello"),
+                        author = UserName("bob"),
+                        content = Post.Content("testing")
+                      ) *> repo.findPostById(postId)
+                    )
         } yield assert(actual)(
           equalTo(
             Post(id = postId, title = Post.Title("hello"), author = UserName("bob"), published = false, content = Post.Content("testing"))

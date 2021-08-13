@@ -20,10 +20,10 @@ private[db] object SkunkExtensions {
       session.prepare(self).use(_.execute(a)).wrapException
   }
   implicit final class QueryOps[A, B](private val self: Query[A, B]) extends AnyVal {
-    def option(a: A)(implicit session: Session[Task]): IO[Error.Unexpected, Option[B]] =
+    def option(a: A)(implicit session: Session[Task]): IO[Error.Unexpected, Option[B]]             =
       session.prepare(self).use(_.option(a)).wrapException
-    def unique(a: A)(implicit session: Session[Task]): IO[Error.Unexpected, B]         = session.prepare(self).use(_.unique(a)).wrapException
-    def list(a: A, chunkSize: Int)(implicit session: Session[Task]): IO[Error.Unexpected, List[B]]     =
+    def unique(a: A)(implicit session: Session[Task]): IO[Error.Unexpected, B]                     = session.prepare(self).use(_.unique(a)).wrapException
+    def list(a: A, chunkSize: Int)(implicit session: Session[Task]): IO[Error.Unexpected, List[B]] =
       session.prepare(self).use(_.stream(a, chunkSize).compile.toList).wrapException
   }
 }

@@ -16,15 +16,14 @@ import zio.{IO, Managed, Task, TaskManaged}
 import java.time.LocalDateTime
 import java.util.UUID
 
-
 private[db] final case class PostDb(
-                                     id: UUID,
-                                     title: NonEmptyString,
-                                     author: UserName,
-                                     content: String,
-                                     published: Boolean,
-                                     createdAt: LocalDateTime
-                                   )
+  id: UUID,
+  title: NonEmptyString,
+  author: UserName,
+  content: String,
+  published: Boolean,
+  createdAt: LocalDateTime
+)
 private[db] object PostDb {
   val codec: Codec[PostDb] =
     (uuid ~ nonEmptyText ~ usernameCodec ~ text ~ bool ~ createdAt).gimap[PostDb]
@@ -40,13 +39,13 @@ private[db] object PostDb {
 }
 
 final class DbPostRepository(preparedQueries: PreparedQueries)(implicit
-                                                               private[db] val session: SessionTask
+  private[db] val session: SessionTask
 ) extends PostRepository {
 
-  override def createPost(id: Post.Id, title: Post.Title, author: UserName, content: Post.Content): IO[PostRepository.Error,Post] =
-    Fragments.postCreate.unique((id.value, title.value, author, content.value))
+  override def createPost(id: Post.Id, title: Post.Title, author: UserName, content: Post.Content): IO[PostRepository.Error, Post] =
+    Fragments.postCreate
+      .unique((id.value, title.value, author, content.value))
       .map(PostDb.toDomain)
-
 
   override def deletePost(id: Post.Id): IO[PostRepository.Error, Unit] =
     Fragments.postDelete(Fragments.byId).execute(id.value).unit
@@ -65,11 +64,10 @@ final class DbPostRepository(preparedQueries: PreparedQueries)(implicit
 object DbPostRepository {
 
   private case class PreparedQueries(
-                                 findById: PreparedQuery[Task, UUID, PostDb]
-                               )
+    findById: PreparedQuery[Task, UUID, PostDb]
+  )
 
   /**
-   *
    * Used to create a "pool of repository" mapped from a pool of DB session
    * That ensure that one and only one session is used per user request,
    * preventing eventual "portal_xx not found" issues and simplifying the repository implementation
@@ -78,7 +76,7 @@ object DbPostRepository {
    */
   def managed(sessionPool: TaskManaged[SessionTask]): Managed[Error.Unexpected, DbPostRepository] = for {
     // we retrieve a session from the pool
-    session                                             <- sessionPool.wrapException
+    session  <- sessionPool.wrapException
     findById <- session.prepare(Fragments.postQuery(Fragments.byId)).toManagedZIO.wrapException
 
   } yield new DbPostRepository(PreparedQueries(findById = findById))(session)

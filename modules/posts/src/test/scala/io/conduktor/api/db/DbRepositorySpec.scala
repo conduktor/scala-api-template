@@ -11,8 +11,7 @@ object DbRepositorySpec extends DefaultRunnableSpec {
 
   private def initTables(x: Has[TaskManaged[SessionTask]]) =
     x.get.use { session =>
-      session.execute(
-        sql"""
+      session.execute(sql"""
 CREATE TABLE "post" (
 "id" UUID NOT NULL,
 "title" TEXT NOT NULL,

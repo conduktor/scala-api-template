@@ -16,7 +16,7 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
 
     private val db = collection.mutable.Map[UUID, Post]()
 
-    override def createPost(id: Post.Id, title: Post.Title, author: UserName, content: Post.Content): IO[Error,Post] = UIO {
+    override def createPost(id: Post.Id, title: Post.Title, author: UserName, content: Post.Content): IO[Error, Post] = UIO {
       db(id.value) = Post(
         id = id,
         title = title,
@@ -27,17 +27,17 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
       db(id.value)
     }
 
-    override def findPostByTitle(title: Post.Title): IO[Error,Option[Post]] =
+    override def findPostByTitle(title: Post.Title): IO[Error, Option[Post]] =
       UIO {
         db.values.find(_.title == title)
       }
 
-    override def deletePost(id: Post.Id): IO[Error,Unit] = UIO {
+    override def deletePost(id: Post.Id): IO[Error, Unit] = UIO {
       db.remove(id.value)
       ()
     }
 
-    override def findPostById(id: Post.Id): IO[Error,Post] = UIO {
+    override def findPostById(id: Post.Id): IO[Error, Post] = UIO {
       db(id.value)
     }
 
@@ -46,9 +46,9 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
     }
   }
 
-  private val inMemoryRepo = new InMemoryPostRepository
+  private val inMemoryRepo                        = new InMemoryPostRepository
   val testLayer: ULayer[Has[PostRepository.Pool]] =
-    (() => ZManaged.succeed(inMemoryRepo) ).toLayer
+    (() => ZManaged.succeed(inMemoryRepo)).toLayer
 
   override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "memory").provideCustomLayer(testLayer)
 

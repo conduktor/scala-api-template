@@ -35,15 +35,15 @@ object Librairies {
   )
 
   val http = Seq(
-    "org.http4s"                    %% "http4s-dsl"              % http4sVersion,
-    "org.http4s"                    %% "http4s-blaze-server"     % http4sVersion,
-    "org.http4s"                    %% "http4s-circe"            % http4sVersion,
-    "com.softwaremill.sttp.tapir"   %% "tapir-zio"               % tapirVersion,
-    "com.softwaremill.sttp.tapir"   %% "tapir-zio-http4s-server" % tapirVersion,
-    "com.softwaremill.sttp.tapir"   %% "tapir-refined"           % tapirVersion,
-    "com.softwaremill.sttp.tapir"   %% "tapir-newtype"           % tapirVersion,
-    "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"        % tapirVersion,
-    "com.softwaremill.sttp.shared"  %% "ws"                      % "1.2.5", //resolve a conflict between client3 and tapir
+    "org.http4s"                   %% "http4s-dsl"              % http4sVersion,
+    "org.http4s"                   %% "http4s-blaze-server"     % http4sVersion,
+    "org.http4s"                   %% "http4s-circe"            % http4sVersion,
+    "com.softwaremill.sttp.tapir"  %% "tapir-zio"               % tapirVersion,
+    "com.softwaremill.sttp.tapir"  %% "tapir-zio-http4s-server" % tapirVersion,
+    "com.softwaremill.sttp.tapir"  %% "tapir-refined"           % tapirVersion,
+    "com.softwaremill.sttp.tapir"  %% "tapir-newtype"           % tapirVersion,
+    "com.softwaremill.sttp.tapir"  %% "tapir-json-circe"        % tapirVersion,
+    "com.softwaremill.sttp.shared" %% "ws"                      % "1.2.5" //resolve a conflict between client3 and tapir
   )
 
   val client = Seq(

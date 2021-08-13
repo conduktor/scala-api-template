@@ -17,10 +17,10 @@ object PostServiceSpec extends DefaultRunnableSpec {
     testM("should fail to create two posts with the same title") {
       for {
         postService <- ZIO.service[PostService]
-        r1 <- postService.createPost(author = UserName("ray"), title = Post.Title("title"), content = Post.Content("content1")).either
-        r2 <- postService.createPost(author = UserName("ray"), title = Post.Title("title"), content = Post.Content("content2")).either
+        r1          <- postService.createPost(author = UserName("ray"), title = Post.Title("title"), content = Post.Content("content1")).either
+        r2          <- postService.createPost(author = UserName("ray"), title = Post.Title("title"), content = Post.Content("content2")).either
 
       } yield assert(r1)(isRight) && assert(r2)(isLeft(equalTo(DuplicatePostError(Post.Title("title")))))
     }
-  ).injectCustom(MemoryRepositorySpec.testLayer,Logging.ignore, PostServiceLive.layer)
+  ).injectCustom(MemoryRepositorySpec.testLayer, Logging.ignore, PostServiceLive.layer)
 }

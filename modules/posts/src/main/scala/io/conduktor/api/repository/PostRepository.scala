@@ -32,8 +32,8 @@ object PostRepository extends zio.Accessible[PostRepository] {
 
   sealed trait Error
   object Error {
-    final case class PostNotFound(id: Post.Id)                extends Error
-    final case class Unexpected(throwable: Throwable)                   extends Error
+    final case class PostNotFound(id: Post.Id)        extends Error
+    final case class Unexpected(throwable: Throwable) extends Error
   }
 
 }
