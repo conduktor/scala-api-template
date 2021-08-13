@@ -1,29 +1,32 @@
 package io.conduktor.api.repository.db
 
-import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.types.all.NonEmptyString
 import io.conduktor.api.db.DbSessionPool.SessionTask
 import io.conduktor.api.model.Post
 import io.conduktor.api.repository.PostRepository
+import io.conduktor.api.repository.PostRepository.Error
+import io.conduktor.api.repository.db.DbPostRepository.PreparedQueries
+import io.conduktor.api.repository.db.SkunkExtensions._
 import io.conduktor.primitives.types.UserName
-import skunk.codec.all._
-import skunk.implicits._
-import skunk.{Codec, Command, Fragment, Query}
+import skunk.codec.all.{bool, uuid, text}
+import skunk.{Codec, Fragment, PreparedQuery}
 import zio.interop.catz._
-import zio.{Has, Task, TaskManaged, URLayer}
+import zio.{IO, Managed, Task, TaskManaged}
 
 import java.time.LocalDateTime
 import java.util.UUID
 
+
 private[db] final case class PostDb(
-  id: UUID,
-  title: NonEmptyString,
-  author: UserName,
-  content: String,
-  published: Boolean,
-  createdAt: LocalDateTime
-)
-private object PostDb {
-  private[db] val codec: Codec[PostDb] =
+                                     id: UUID,
+                                     title: NonEmptyString,
+                                     author: UserName,
+                                     content: String,
+                                     published: Boolean,
+                                     createdAt: LocalDateTime
+                                   )
+private[db] object PostDb {
+  val codec: Codec[PostDb] =
     (uuid ~ nonEmptyText ~ usernameCodec ~ text ~ bool ~ createdAt).gimap[PostDb]
 
   def toDomain(p: PostDb): Post =
@@ -36,59 +39,48 @@ private object PostDb {
     )
 }
 
-final class DbPostRepository(session: TaskManaged[SessionTask]) extends PostRepository {
+final class DbPostRepository(preparedQueries: PreparedQueries)(implicit
+                                                               private[db] val session: SessionTask
+) extends PostRepository {
 
-  private object Fragments {
-    val fullPostFields: Fragment[skunk.Void] = sql"id, title, author, content, published, created_at"
-    val byId: Fragment[UUID]                 = sql"where id = $uuid"
-    val byTitle: Fragment[NonEmptyString]    = sql"where title = $nonEmptyText"
+  override def createPost(id: Post.Id, title: Post.Title, author: UserName, content: Post.Content): IO[PostRepository.Error,Post] =
+    Fragments.postCreate.unique((id.value, title.value, author, content.value))
+      .map(PostDb.toDomain)
 
-    def postQuery[A](where: Fragment[A]): Query[A, PostDb] =
-      sql"SELECT $fullPostFields FROM post $where".query(PostDb.codec)
 
-    def postDelete[A](where: Fragment[A]): Command[A] =
-      sql"DELETE FROM post $where".command
+  override def deletePost(id: Post.Id): IO[PostRepository.Error, Unit] =
+    Fragments.postDelete(Fragments.byId).execute(id.value).unit
 
-    // using a Query to retrieve user
-    def postCreate: Query[(UUID, NonEmptyString, UserName, String), PostDb] =
-      sql"""
-        INSERT INTO post (id, title, author, content)
-        VALUES ($uuid, $nonEmptyText, ${usernameCodec}, $text)
-        RETURNING $fullPostFields
-      """
-        .query(PostDb.codec)
-        .gcontramap[(UUID, NonEmptyString, UserName, String)]
-  }
-
-  override def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post] =
-    session.use {
-      _.prepare(Fragments.postCreate).use(_.unique((id, title.value, author, content.value)))
-    }.map(PostDb.toDomain)
-
-  override def deletePost(id: UUID): Task[Unit] =
-    session.use {
-      _.prepare(Fragments.postDelete(Fragments.byId)).use(_.execute(id)).unit
-    }
-
-  override def findPostById(id: UUID): Task[Post] =
-    session.use {
-      _.prepare(Fragments.postQuery(Fragments.byId)).use(_.unique(id))
-    }.map(PostDb.toDomain)
+  override def findPostById(id: Post.Id): IO[PostRepository.Error, Post] =
+    preparedQueries.findById.unique(id.value).map(PostDb.toDomain).wrapException
 
   // Skunk allows streaming pagination, but it requires keeping the connection opens
-  override def allPosts: Task[List[Post]] =
-    session.use { session =>
-      session.prepare(Fragments.postQuery(Fragment.empty)).use(_.stream(skunk.Void, 64).compile.toList)
-    }.map(_.map(PostDb.toDomain))
+  override def allPosts: IO[PostRepository.Error, List[Post]] =
+    Fragments.postQuery(Fragment.empty).list(skunk.Void, 64).map(_.map(PostDb.toDomain))
 
-  override def findPostByTitle(title: Post.Title): Task[Option[Post]] =
-    session.use { session =>
-      session.prepare(Fragments.postQuery(Fragments.byTitle)).use(_.option(title.value))
-    }.map(_.map(PostDb.toDomain))
+  override def findPostByTitle(title: Post.Title): IO[PostRepository.Error, Option[Post]] =
+    Fragments.postQuery(Fragments.byTitle).option(title.value).map(_.map(PostDb.toDomain))
 }
 
 object DbPostRepository {
 
-  val layer: URLayer[Has[TaskManaged[SessionTask]], Has[PostRepository]] = (new DbPostRepository(_)).toLayer
+  private case class PreparedQueries(
+                                 findById: PreparedQuery[Task, UUID, PostDb]
+                               )
+
+  /**
+   *
+   * Used to create a "pool of repository" mapped from a pool of DB session
+   * That ensure that one and only one session is used per user request,
+   * preventing eventual "portal_xx not found" issues and simplifying the repository implementation
+   *
+   * Here we demo preparing a statement in advance, only do it here if it's going to be used by most of your requests
+   */
+  def managed(sessionPool: TaskManaged[SessionTask]): Managed[Error.Unexpected, DbPostRepository] = for {
+    // we retrieve a session from the pool
+    session                                             <- sessionPool.wrapException
+    findById <- session.prepare(Fragments.postQuery(Fragments.byId)).toManagedZIO.wrapException
+
+  } yield new DbPostRepository(PreparedQueries(findById = findById))(session)
 
 }

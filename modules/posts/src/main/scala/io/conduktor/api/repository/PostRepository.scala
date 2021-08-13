@@ -1,35 +1,39 @@
 package io.conduktor.api.repository
 
+import io.conduktor.api.db.DbSessionPool.SessionTask
 import io.conduktor.api.model.Post
+import io.conduktor.api.repository.PostRepository.Error
+import io.conduktor.api.repository.db.DbPostRepository
 import io.conduktor.primitives.types.UserName
-import zio.{Has, Task, ZIO}
-
-import java.util.UUID
+import zio.{Has, IO, Managed, TaskManaged, ZLayer}
 
 trait PostRepository {
-  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): Task[Post]
+  def createPost(id: Post.Id, title: Post.Title, author: UserName, content: Post.Content): IO[Error, Post]
 
-  def findPostByTitle(title: Post.Title): Task[Option[Post]]
+  def findPostByTitle(title: Post.Title): IO[Error, Option[Post]]
 
-  def deletePost(id: UUID): Task[Unit]
+  def deletePost(id: Post.Id): IO[Error, Unit]
 
-  def findPostById(id: UUID): Task[Post]
+  def findPostById(id: Post.Id): IO[Error, Post]
 
-  //paginated
-  def allPosts: ZIO[Any, Throwable, List[
+  //TODO paginated, zio stream
+  def allPosts: IO[Error, List[
     Post
-  ]] // using fs2 stream (as tapir hasn't done the conversion for http4s yet https://github.com/softwaremill/tapir/issues/714 )
-
-  //TODO example with LISTEN (ex: comments ?)
+  ]]
 }
 
-object PostRepository {
-  def createPost(id: UUID, title: Post.Title, author: UserName, content: Post.Content): ZIO[Has[PostRepository], Throwable, Post] =
-    ZIO.serviceWith(_.createPost(id, title, author, content))
+object PostRepository extends zio.Accessible[PostRepository] {
 
-  def deletePost(id: UUID): ZIO[Has[PostRepository], Throwable, Unit] = ZIO.serviceWith(_.deletePost(id))
+  type Pool = Managed[Error.Unexpected, PostRepository]
+  object Pool {
+    def live: ZLayer[Has[TaskManaged[SessionTask]], Throwable, Has[Pool]] =
+      (DbPostRepository.managed _).toLayer
+  }
 
-  def getPostById(id: UUID): ZIO[Has[PostRepository], Throwable, Post] = ZIO.serviceWith(_.findPostById(id))
+  sealed trait Error
+  object Error {
+    final case class PostNotFound(id: Post.Id)                extends Error
+    final case class Unexpected(throwable: Throwable)                   extends Error
+  }
 
-  def allPosts: ZIO[Has[PostRepository], Throwable, List[Post]] = ZIO.serviceWith(_.allPosts)
 }
