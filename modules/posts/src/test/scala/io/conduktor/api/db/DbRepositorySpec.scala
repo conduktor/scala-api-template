@@ -1,7 +1,7 @@
 package io.conduktor.api.db
 
 import io.conduktor.api.db.DbSessionPool.SessionTask
-import io.conduktor.api.repository.db.DbPostRepository
+import io.conduktor.api.repository.PostRepository
 import skunk.implicits.toStringOps
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec}
@@ -25,7 +25,7 @@ PRIMARY KEY ("id")
 )""".command)
     }
 
-  val repoLayer = (EmbeddedPostgres.pgLayer >>> DbSessionPool.layer.tap(initTables) >>> DbPostRepository.layer).orDie
+  val repoLayer = (EmbeddedPostgres.pgLayer >>> DbSessionPool.layer.tap(initTables) >>> PostRepository.Pool.live).orDie
 
   override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "database").provideCustomLayer(repoLayer)
 
