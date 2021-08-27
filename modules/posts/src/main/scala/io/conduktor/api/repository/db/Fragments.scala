@@ -23,7 +23,7 @@ private[db] object Fragments {
   def postCreate: Query[(UUID, NonEmptyString, UserName, String), PostDb] =
     sql"""
         INSERT INTO post (id, title, author, content)
-        VALUES ($uuid, $nonEmptyText, ${usernameCodec}, $text)
+        VALUES ($uuid, $nonEmptyText, $usernameCodec, $text)
         RETURNING $fullPostFields
       """
       .query(PostDb.codec)

@@ -98,7 +98,7 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service, log: Lo
   private def validateClaims(claims: JwtClaim) =
     withJavaClock.flatMap { implicit clock =>
       ZIO
-        .fail(new RuntimeException(s"The JWT did not pass validation for issuer ${issuer}"))
+        .fail(new RuntimeException(s"The JWT did not pass validation for issuer $issuer"))
         .unless(claims.isValid(issuer)(clock))
     }
 }

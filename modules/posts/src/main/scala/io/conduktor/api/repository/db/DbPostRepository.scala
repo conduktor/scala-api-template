@@ -68,9 +68,8 @@ object DbPostRepository {
   )
 
   /**
-   * Used to create a "pool of repository" mapped from a pool of DB session
-   * That ensure that one and only one session is used per user request,
-   * preventing eventual "portal_xx not found" issues and simplifying the repository implementation
+   * Used to create a "pool of repository" mapped from a pool of DB session That ensure that one and only one session is used per user
+   * request, preventing eventual "portal_xx not found" issues and simplifying the repository implementation
    *
    * Here we demo preparing a statement in advance, only do it here if it's going to be used by most of your requests
    */
