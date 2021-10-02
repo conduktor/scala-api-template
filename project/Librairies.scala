@@ -2,19 +2,19 @@ import sbt._
 
 object Librairies {
 
-  val zioVersion       = "1.0.10"
-  val zioConfigVersion = "1.0.6"
+  val zioVersion       = "1.0.12"
+  val zioConfigVersion = "1.0.10"
   val tapirVersion     = "0.18.3"
   val http4sVersion    = "0.22.0"
   val circeVersion     = "0.14.1"
   val refinedVersion   = "0.9.27"
-  val sttpVersion      = "3.3.13"
+  val sttpVersion      = "3.3.14"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "7.13.0",
-    "org.postgresql" % "postgresql"  % "42.2.23"
+    "org.flywaydb"   % "flyway-core" % "7.15.0",
+    "org.postgresql" % "postgresql"  % "42.2.24"
   )
 
   val refined: Seq[ModuleID] = Seq(
@@ -26,7 +26,7 @@ object Librairies {
     "dev.zio"              %% "zio"          % zioVersion,
     "dev.zio"              %% "zio-test"     % zioVersion % Test,
     "dev.zio"              %% "zio-test-sbt" % zioVersion % Test,
-    "io.github.kitlangton" %% "zio-magic"    % "0.3.7"
+    "io.github.kitlangton" %% "zio-magic"    % "0.3.9"
   )
 
   val db = Seq(
@@ -43,7 +43,7 @@ object Librairies {
     "com.softwaremill.sttp.tapir"  %% "tapir-refined"           % tapirVersion,
     "com.softwaremill.sttp.tapir"  %% "tapir-newtype"           % tapirVersion,
     "com.softwaremill.sttp.tapir"  %% "tapir-json-circe"        % tapirVersion,
-    "com.softwaremill.sttp.shared" %% "ws"                      % "1.2.5" //resolve a conflict between client3 and tapir
+    "com.softwaremill.sttp.shared" %% "ws"                      % "1.2.6" //resolve a conflict between client3 and tapir
   )
 
   val client = Seq(
@@ -52,7 +52,7 @@ object Librairies {
   )
 
   val jwt = Seq(
-    "com.github.jwt-scala" %% "jwt-circe" % "9.0.0",
+    "com.github.jwt-scala" %% "jwt-circe" % "9.0.1",
     "com.auth0"             % "jwks-rsa"  % "0.19.0"
   )
 
@@ -65,7 +65,7 @@ object Librairies {
   )
 
   val logging = Seq(
-    "dev.zio" %% "zio-logging-slf4j" % "0.5.11"
+    "dev.zio" %% "zio-logging-slf4j" % "0.5.12"
   )
 
   val configurations = Seq(
