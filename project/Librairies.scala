@@ -26,7 +26,7 @@ object Librairies {
     "dev.zio"              %% "zio"          % zioVersion,
     "dev.zio"              %% "zio-test"     % zioVersion % Test,
     "dev.zio"              %% "zio-test-sbt" % zioVersion % Test,
-    "io.github.kitlangton" %% "zio-magic"    % "0.3.7"
+    "io.github.kitlangton" %% "zio-magic"    % "0.3.9"
   )
 
   val db = Seq(
