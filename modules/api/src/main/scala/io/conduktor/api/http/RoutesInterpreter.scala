@@ -21,7 +21,7 @@ object RoutesInterpreter {
     HealthRoutes.Endpoints.all.map(_.widen[Env]) ++
       posts.v1.PostRoutes.Endpoints.all
 
-  private lazy val allDocsYaml: String = {
+  private lazy val allDocsYaml: String               = {
     import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
     import sttp.tapir.openapi.circe.yaml._
     OpenAPIDocsInterpreter().serverEndpointsToOpenAPI(endpoints, "Template API", "1.0").toYaml

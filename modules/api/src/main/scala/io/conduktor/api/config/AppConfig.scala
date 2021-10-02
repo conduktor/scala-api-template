@@ -16,7 +16,7 @@ final case class AppConfig(
 )
 final case class HttpConfig(port: Int)
 
-private object DB {
+private object DB    {
   val config: ConfigDescriptor[DBConfig] =
     (string("DB_USER") |@|
       refine[String, NonEmpty]("DB_PASSWORD").coerce[ConfigDescriptor[Secret]].optional |@|

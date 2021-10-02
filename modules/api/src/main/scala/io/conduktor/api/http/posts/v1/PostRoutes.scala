@@ -21,7 +21,7 @@ object PostRoutes {
 
   type Env = Has[AuthService] with Has[PostService] with Random
 
-  private def serverError(defaultMessage: => String)(error: Throwable): ServerError =
+  private def serverError(defaultMessage: => String)(error: Throwable): ServerError                                           =
     ServerError(Option(error.getMessage).getOrElse(defaultMessage))
 
   private def createPostServerLogic(user: User, post: CreatePostInput): ZIO[Has[PostService] with Random, ErrorInfo, PostDTO] =
@@ -32,22 +32,22 @@ object PostRoutes {
     } yield created)
       .mapBoth(handlePostServiceError(s"Error creating post with title ${post.title}"), PostDTO.from)
 
-  private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ErrorInfo, Unit] =
+  private def deletePostServerLogic(id: UUID): ZIO[Has[PostService], ErrorInfo, Unit]                                         =
     ZIO
       .serviceWith[PostService](_.deletePost(Post.Id(id)))
       .mapError(handlePostServiceError(s"Error deleting post with id $id"))
 
-  private def getPostByIdServerLogic(id: UUID): ZIO[Has[PostService], ErrorInfo, PostDTO] =
+  private def getPostByIdServerLogic(id: UUID): ZIO[Has[PostService], ErrorInfo, PostDTO]                                     =
     ZIO
       .serviceWith[PostService](_.findById(Post.Id(id)))
       .mapBoth(handlePostServiceError(s"Error finding post $id"), PostDTO.from)
 
-  private def allPostsServerLogic: ZIO[Has[PostService], ErrorInfo, List[PostDTO]] =
+  private def allPostsServerLogic: ZIO[Has[PostService], ErrorInfo, List[PostDTO]]                                            =
     ZIO
       .serviceWith[PostService](_.all)
       .mapBoth(handlePostServiceError("Error listing posts"), _.map(PostDTO.from))
 
-  private def handlePostServiceError(context: String)(error: PostServiceError): ErrorInfo = {
+  private def handlePostServiceError(context: String)(error: PostServiceError): ErrorInfo                                     = {
     import cats.syntax.show._
     error match {
       case PostService.DuplicatePostError(title) =>

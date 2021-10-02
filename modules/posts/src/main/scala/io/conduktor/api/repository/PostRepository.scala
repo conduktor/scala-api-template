@@ -25,7 +25,7 @@ trait PostRepository {
 object PostRepository extends zio.Accessible[PostRepository] {
 
   type Pool = Managed[Error.Unexpected, PostRepository]
-  object Pool {
+  object Pool  {
     def live: ZLayer[Has[TaskManaged[SessionTask]], Throwable, Has[Pool]] =
       (DbPostRepository.managed _).toLayer
   }

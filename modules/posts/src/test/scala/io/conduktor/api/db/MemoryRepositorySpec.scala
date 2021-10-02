@@ -27,21 +27,21 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
       db(id.value)
     }
 
-    override def findPostByTitle(title: Post.Title): IO[Error, Option[Post]] =
+    override def findPostByTitle(title: Post.Title): IO[Error, Option[Post]]                                          =
       UIO {
         db.values.find(_.title == title)
       }
 
-    override def deletePost(id: Post.Id): IO[Error, Unit] = UIO {
+    override def deletePost(id: Post.Id): IO[Error, Unit]                                                             = UIO {
       db.remove(id.value)
       ()
     }
 
-    override def findPostById(id: Post.Id): IO[Error, Post] = UIO {
+    override def findPostById(id: Post.Id): IO[Error, Post]                                                           = UIO {
       db(id.value)
     }
 
-    override def allPosts: IO[Error, List[Post]] = UIO {
+    override def allPosts: IO[Error, List[Post]]                                                                      = UIO {
       db.values.toList
     }
   }
@@ -50,6 +50,6 @@ object MemoryRepositorySpec extends DefaultRunnableSpec {
   val testLayer: ULayer[Has[PostRepository.Pool]] =
     (() => ZManaged.succeed(inMemoryRepo)).toLayer
 
-  override def spec: ZSpec[TestEnvironment, Any] = RepositorySpec.spec(repositoryType = "memory").provideCustomLayer(testLayer)
+  override def spec: ZSpec[TestEnvironment, Any]  = RepositorySpec.spec(repositoryType = "memory").provideCustomLayer(testLayer)
 
 }

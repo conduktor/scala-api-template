@@ -34,20 +34,20 @@ addCommandAlias("migrate-apply", "runMain io.conduktor.api.ApiMigrationApp")
  *
  * The `aggregate` setting will instruct sbt that when you're launching an sbt command, you want it applied to all the aggregated modules
  */
-lazy val root =
+lazy val root     =
   Project(id = "scala-api-template", base = file("."))
     .disablePlugins(RevolverPlugin)
     .settings(noDoc: _*)
     .aggregate(api, auth, postgres, common)
 
-lazy val auth = project
+lazy val auth     = project
   .in(file("modules/auth"))
   .disablePlugins(RevolverPlugin)
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= jwt ++ effect ++ json ++ logging)
   .dependsOn(common)
 
-lazy val common = project
+lazy val common   = project
   .in(file("modules/common"))
   .disablePlugins(RevolverPlugin)
   .settings(commonSettings: _*)
@@ -66,14 +66,14 @@ lazy val postgres = project
   )
   .dependsOn(common)
 
-lazy val posts = project
+lazy val posts    = project
   .in(file("modules/posts"))
   .disablePlugins(RevolverPlugin)
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= jwt ++ effect ++ logging ++ refined)
   .dependsOn(common, postgres % "compile->compile;test->test")
 
-lazy val api   =
+lazy val api      =
   project
     .in(file("modules/api"))
     .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin, AshScriptPlugin)

@@ -5,7 +5,7 @@ import sbt._
 
 object BuildHelper {
 
-  val commonSettings = Seq(
+  val commonSettings      = Seq(
     libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     javacOptions ++= Seq("-source", "11", "-target", "11"),

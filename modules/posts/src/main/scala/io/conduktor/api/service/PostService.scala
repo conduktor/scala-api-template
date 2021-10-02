@@ -20,7 +20,7 @@ trait PostService {
   def all: IO[PostServiceError, List[Post]]
 }
 
-object PostService {
+object PostService      {
   sealed trait PostServiceError
 
   final case class RepositoryError(err: repository.PostRepository.Error) extends PostServiceError
@@ -57,7 +57,7 @@ final class PostServiceLive(random: Random.Service, postRepositoryPool: PostRepo
                       }
     } yield created
 
-  override def deletePost(id: Post.Id): IO[PostServiceError, Unit] = postRepositoryPool.use(_.deletePost(id)).domainError
+  override def deletePost(id: Post.Id): IO[PostServiceError, Unit]                                      = postRepositoryPool.use(_.deletePost(id)).domainError
 
   override def findById(id: Post.Id): IO[PostServiceError, Post] = postRepositoryPool.use(_.findPostById(id)).domainError
 

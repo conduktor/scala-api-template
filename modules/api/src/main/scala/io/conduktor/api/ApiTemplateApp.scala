@@ -49,7 +49,7 @@ object ApiTemplateApp extends App {
     _       <- service.migrate().when(conf.migrate)
   } yield ()
 
-  val program: RIO[AppEnv, ExitCode] = for {
+  val program: RIO[AppEnv, ExitCode]                             = for {
     _        <- migrateDatabase
                   // injecting separately, as repository layer verify the db schema on init
                   .injectCustom(AppConfig.dbOnlyLayer, FlywayDatabaseMigrationService.layer)

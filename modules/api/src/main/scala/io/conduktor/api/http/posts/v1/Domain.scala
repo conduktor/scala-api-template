@@ -26,7 +26,7 @@ private[v1] object Domain extends TapirCodecRefined with TapirCodecNewType {
     published: Boolean,
     content: String
   )
-  object PostDTO {
+  object PostDTO         {
     implicit final val encoder: Codec[PostDTO] = deriveCodec
     implicit val schema: Schema[PostDTO]       = Schema.derived
 

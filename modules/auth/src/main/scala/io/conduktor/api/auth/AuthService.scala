@@ -48,7 +48,7 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service, log: Lo
   private val supportedAlgorithms = Seq(JwtAlgorithm.RS256)
   private val issuer              = s"https://${auth0Conf.domain}/"
 
-  private val cachedJwkProvider =
+  private val cachedJwkProvider                                     =
     new JwkProviderBuilder(issuer)
       .cached(auth0Conf.cacheSize.toLong, auth0Conf.ttl.getSeconds, TimeUnit.SECONDS)
       .build()
@@ -65,7 +65,7 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service, log: Lo
     clockFromOffset
   }
 
-  override def auth(token: AuthToken): Task[User] = {
+  override def auth(token: AuthToken): Task[User]                   = {
     for {
       claims <- validateJwt(token)
       user   <- ZIO.fromEither(decode[User](claims.content))
@@ -74,14 +74,14 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service, log: Lo
     .tapError(log.throwable("Failed to parse auth token", _))
     .provide(Has(clock))
 
-  private def validateJwt(token: AuthToken): RIO[Clock, JwtClaim] = for {
-    jwk    <- getJwk(token) // Get the secret key for this token
+  private def validateJwt(token: AuthToken): RIO[Clock, JwtClaim]   = for {
+    jwk <- getJwk(token)                                                              // Get the secret key for this token
     claims <-
       ZIO.fromTry(JwtCirce.decode(token.show, jwk.getPublicKey, supportedAlgorithms)) // Decode the token using the secret key
-    _      <- validateClaims(claims) // validate the data stored inside the token
+    _ <- validateClaims(claims)                                                       // validate the data stored inside the token
   } yield claims
 
-  private def getJwk(token: AuthToken): Task[Jwk] =
+  private def getJwk(token: AuthToken): Task[Jwk]         =
     for {
       header    <- extractHeader(token)
       jwtHeader <- Task(JwtCirce.parseHeader(header.value))
@@ -95,7 +95,7 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service, log: Lo
       case _                => ZIO.fail(new AuthException("Token does not match the correct pattern"))
     }
 
-  private def validateClaims(claims: JwtClaim) =
+  private def validateClaims(claims: JwtClaim)            =
     withJavaClock.flatMap { implicit clock =>
       ZIO
         .fail(new RuntimeException(s"The JWT did not pass validation for issuer $issuer"))

@@ -15,11 +15,11 @@ private[db] object SkunkExtensions {
     def wrapException: IO[Error.Unexpected, A] = self.mapError(Error.Unexpected)
   }
 
-  implicit final class CommandOps[A](private val self: Command[A])   extends AnyVal {
+  implicit final class CommandOps[A](private val self: Command[A])     extends AnyVal {
     def execute(a: A)(implicit session: Session[Task]): IO[Error.Unexpected, Completion] =
       session.prepare(self).use(_.execute(a)).wrapException
   }
-  implicit final class QueryOps[A, B](private val self: Query[A, B]) extends AnyVal {
+  implicit final class QueryOps[A, B](private val self: Query[A, B])   extends AnyVal {
     def option(a: A)(implicit session: Session[Task]): IO[Error.Unexpected, Option[B]]             =
       session.prepare(self).use(_.option(a)).wrapException
     def unique(a: A)(implicit session: Session[Task]): IO[Error.Unexpected, B]                     = session.prepare(self).use(_.unique(a)).wrapException

@@ -45,7 +45,7 @@ private class Stub(random: Random.Service) extends PostService {
       posts(id)
     }
 
-  override def deletePost(uuid: Post.Id): IO[PostService.PostServiceError, Unit] = UIO(posts.remove(uuid)).unit
+  override def deletePost(uuid: Post.Id): IO[PostService.PostServiceError, Unit]                                              = UIO(posts.remove(uuid)).unit
 
   override def findById(uuid: Post.Id): IO[PostService.PostServiceError, Post] = UIO(posts(uuid))
 
@@ -91,7 +91,7 @@ object PostRoutesSpec extends DefaultRunnableSpec {
     Logging.ignore
   )
 
-  val stubServicesLayer: Layer = ZLayer.fromSomeMagic[zio.ZEnv, Env](
+  val stubServicesLayer: Layer                             = ZLayer.fromSomeMagic[zio.ZEnv, Env](
     Stub.layer,
     commonLayers,
     Logging.ignore
@@ -99,7 +99,7 @@ object PostRoutesSpec extends DefaultRunnableSpec {
 
   private final case class TestEnv(name: String, layer: Layer)
 
-  private val envs: Seq[TestEnv] = Seq(
+  private val envs: Seq[TestEnv]                           = Seq(
     TestEnv("with db", dbLayers),
     TestEnv("with memory repository", memoryLayer),
     TestEnv("with stub services", stubServicesLayer)
@@ -110,7 +110,7 @@ object PostRoutesSpec extends DefaultRunnableSpec {
   private def run(envs: Seq[TestEnv], suites: Seq[String => ZSpec[Env, Throwable]]): ZSpec[zio.ZEnv, Throwable] =
     suite("")(envs.flatMap(env => suites.map(suite => suite(env.name).provideSomeLayerShared(env.layer.orDie))): _*)
 
-  override def spec: ZSpec[TestEnvironment, Throwable] = run(envs, suites)
+  override def spec: ZSpec[TestEnvironment, Throwable]                                                          = run(envs, suites)
 
   private def `/posts/v1`(name: String) = {
     suite(s"/posts/v1 $name")(

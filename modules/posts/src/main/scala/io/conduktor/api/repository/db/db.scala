@@ -12,7 +12,7 @@ package object db {
 
   final val createdAt: Codec[LocalDateTime] = timestamp(3)
 
-  final val nonEmptyText: Codec[NonEmptyString] =
+  final val nonEmptyText: Codec[NonEmptyString]           =
     text.imap[NonEmptyString](NonEmptyString.unsafeFrom)(_.value)
 
   implicit final val usernameCodec: skunk.Codec[UserName] = db.nonEmptyText.coerce[skunk.Codec[UserName]]

@@ -47,14 +47,14 @@ final class DbPostRepository(preparedQueries: PreparedQueries)(implicit
       .unique((id.value, title.value, author, content.value))
       .map(PostDb.toDomain)
 
-  override def deletePost(id: Post.Id): IO[PostRepository.Error, Unit] =
+  override def deletePost(id: Post.Id): IO[PostRepository.Error, Unit]                                                             =
     Fragments.postDelete(Fragments.byId).execute(id.value).unit
 
-  override def findPostById(id: Post.Id): IO[PostRepository.Error, Post] =
+  override def findPostById(id: Post.Id): IO[PostRepository.Error, Post]                                                           =
     preparedQueries.findById.unique(id.value).map(PostDb.toDomain).wrapException
 
   // Skunk allows streaming pagination, but it requires keeping the connection opens
-  override def allPosts: IO[PostRepository.Error, List[Post]] =
+  override def allPosts: IO[PostRepository.Error, List[Post]]                             =
     Fragments.postQuery(Fragment.empty).list(skunk.Void, 64).map(_.map(PostDb.toDomain))
 
   override def findPostByTitle(title: Post.Title): IO[PostRepository.Error, Option[Post]] =
