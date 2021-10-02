@@ -5,7 +5,7 @@ object Librairies {
   val zioVersion       = "1.0.10"
   val zioConfigVersion = "1.0.6"
   val tapirVersion     = "0.18.3"
-  val http4sVersion    = "0.22.0"
+  val http4sVersion    = "0.22.5"
   val circeVersion     = "0.14.1"
   val refinedVersion   = "0.9.26"
   val sttpVersion      = "3.3.13"
