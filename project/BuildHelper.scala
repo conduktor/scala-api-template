@@ -25,7 +25,7 @@ object BuildHelper {
     dockerBaseImage           := "adoptopenjdk/openjdk11:alpine-jre"
   ) ++ sys.env.get("RELEASE_TAG").map(v => Seq(Docker / version := v)).getOrElse(Seq.empty)
 
-  lazy val noDoc          = Seq(
+  lazy val noDoc = Seq(
     (Compile / doc / sources)                := Seq.empty,
     (Compile / packageDoc / publishArtifact) := false
   )

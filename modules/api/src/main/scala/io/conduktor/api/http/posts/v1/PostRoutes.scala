@@ -66,14 +66,14 @@ object PostRoutes {
 
     val BASE_PATH: EndpointInput[Unit] = "posts" / "v1"
 
-    private val createPostEndpoint  =
+    private val createPostEndpoint =
       secureEndpoint.post
         .in(BASE_PATH)
         .in(jsonBody[CreatePostInput])
         .out(jsonBody[PostDTO])
         .serverLogic { case (user, post) => createPostServerLogic(user, post) }
 
-    private val deletePostEndpoint  =
+    private val deletePostEndpoint =
       secureEndpoint.delete
         .in(BASE_PATH / path[UUID]("id"))
         .out(emptyOutput)
@@ -85,7 +85,7 @@ object PostRoutes {
         .out(jsonBody[PostDTO])
         .serverLogic { case (_, id) => getPostByIdServerLogic(id) }
 
-    private val allPostsEndpoint    =
+    private val allPostsEndpoint =
       secureEndpoint.get
         .in(BASE_PATH)
         .out(jsonBody[List[PostDTO]])

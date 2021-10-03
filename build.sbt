@@ -73,7 +73,7 @@ lazy val posts = project
   .settings(libraryDependencies ++= jwt ++ effect ++ logging ++ refined)
   .dependsOn(common, postgres % "compile->compile;test->test")
 
-lazy val api   =
+lazy val api =
   project
     .in(file("modules/api"))
     .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin, AshScriptPlugin)

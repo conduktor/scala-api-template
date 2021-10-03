@@ -75,10 +75,10 @@ final class JwtAuthService(auth0Conf: Auth0Config, clock: Clock.Service, log: Lo
     .provide(Has(clock))
 
   private def validateJwt(token: AuthToken): RIO[Clock, JwtClaim] = for {
-    jwk    <- getJwk(token) // Get the secret key for this token
+    jwk <- getJwk(token)                                                              // Get the secret key for this token
     claims <-
       ZIO.fromTry(JwtCirce.decode(token.show, jwk.getPublicKey, supportedAlgorithms)) // Decode the token using the secret key
-    _      <- validateClaims(claims) // validate the data stored inside the token
+    _ <- validateClaims(claims)                                                       // validate the data stored inside the token
   } yield claims
 
   private def getJwk(token: AuthToken): Task[Jwk] =
