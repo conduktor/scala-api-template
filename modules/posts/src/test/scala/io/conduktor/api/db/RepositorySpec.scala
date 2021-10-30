@@ -15,7 +15,7 @@ object RepositorySpec {
   def spec(repositoryType: String): ZSpec[TestEnvironment with Has[PostRepository.Pool] with Random, Any] =
     suite(s"test the behavior of the repository $repositoryType")(
       testM(s"a created post can be retrieved by id") {
-        //FIXME: inject database schema properly
+        // FIXME: inject database schema properly
         for {
           random <- ZIO.service[Random.Service]
           postId <- random.nextUUID.map(Post.Id.apply)
