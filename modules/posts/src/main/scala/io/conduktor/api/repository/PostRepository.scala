@@ -16,7 +16,7 @@ trait PostRepository {
 
   def findPostById(id: Post.Id): IO[Error, Post]
 
-  //TODO paginated, zio stream
+  // TODO paginated, zio stream
   def allPosts: IO[Error, List[
     Post
   ]]
