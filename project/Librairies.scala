@@ -65,7 +65,8 @@ object Librairies {
   )
 
   val logging = Seq(
-    "dev.zio" %% "zio-logging-slf4j" % "0.5.13"
+    "dev.zio" %% "zio-logging-slf4j" % "0.5.13",
+    "ch.qos.logback" % "logback-classic" % "1.2.6"
   )
 
   val configurations = Seq(
