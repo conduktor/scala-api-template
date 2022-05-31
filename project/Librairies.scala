@@ -2,11 +2,11 @@ import sbt._
 
 object Librairies {
 
-  val zioVersion       = "1.0.12"
+  val zioVersion       = "1.0.14"
   val zioConfigVersion = "1.0.10"
   val tapirVersion     = "0.18.3"
   val http4sVersion    = "0.22.0"
-  val circeVersion     = "0.14.1"
+  val circeVersion     = "0.14.2"
   val refinedVersion   = "0.9.27"
   val sttpVersion      = "3.3.16"
   val slf4jVersion     = "1.7.36"
@@ -14,8 +14,8 @@ object Librairies {
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "8.0.3",
-    "org.postgresql" % "postgresql"  % "42.3.1"
+    "org.flywaydb"   % "flyway-core" % "8.0.5",
+    "org.postgresql" % "postgresql"  % "42.3.6"
   )
 
   val refined: Seq[ModuleID] = Seq(
@@ -27,7 +27,7 @@ object Librairies {
     "dev.zio"              %% "zio"          % zioVersion,
     "dev.zio"              %% "zio-test"     % zioVersion % Test,
     "dev.zio"              %% "zio-test-sbt" % zioVersion % Test,
-    "io.github.kitlangton" %% "zio-magic"    % "0.3.9"
+    "io.github.kitlangton" %% "zio-magic"    % "0.3.12"
   )
 
   val db = Seq(
@@ -66,7 +66,7 @@ object Librairies {
   )
 
   val logging = Seq(
-    "dev.zio"       %% "zio-logging-slf4j" % "0.5.13",
+    "dev.zio"       %% "zio-logging-slf4j" % "0.5.14",
     "ch.qos.logback" % "logback-classic"   % "1.2.6",
     "org.slf4j"      % "jul-to-slf4j"      % slf4jVersion,
     "org.slf4j"      % "log4j-over-slf4j"  % slf4jVersion,
