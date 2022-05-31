@@ -15,7 +15,7 @@ object Librairies {
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
     "org.flywaydb"   % "flyway-core" % "8.0.5",
-    "org.postgresql" % "postgresql"  % "42.3.1"
+    "org.postgresql" % "postgresql"  % "42.3.6"
   )
 
   val refined: Seq[ModuleID] = Seq(
@@ -66,7 +66,7 @@ object Librairies {
   )
 
   val logging = Seq(
-    "dev.zio"       %% "zio-logging-slf4j" % "0.5.13",
+    "dev.zio"       %% "zio-logging-slf4j" % "0.5.14",
     "ch.qos.logback" % "logback-classic"   % "1.2.6",
     "org.slf4j"      % "jul-to-slf4j"      % slf4jVersion,
     "org.slf4j"      % "log4j-over-slf4j"  % slf4jVersion,
