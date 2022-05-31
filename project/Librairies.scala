@@ -44,7 +44,7 @@ object Librairies {
     "com.softwaremill.sttp.tapir"  %% "tapir-refined"           % tapirVersion,
     "com.softwaremill.sttp.tapir"  %% "tapir-newtype"           % tapirVersion,
     "com.softwaremill.sttp.tapir"  %% "tapir-json-circe"        % tapirVersion,
-    "com.softwaremill.sttp.shared" %% "ws"                      % "1.2.7" // resolve a conflict between client3 and tapir
+    "com.softwaremill.sttp.shared" %% "ws"                      % "1.3.5" // resolve a conflict between client3 and tapir
   )
 
   val client = Seq(
