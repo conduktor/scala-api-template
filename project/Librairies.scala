@@ -86,7 +86,7 @@ object Librairies {
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion
   )
 
-  val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.4" % Test
+  val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "1.0.1" % Test
   val dbTestingStack   = Seq(embeddedPostgres)
 
 }
