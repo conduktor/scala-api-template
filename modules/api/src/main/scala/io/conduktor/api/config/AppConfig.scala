@@ -57,11 +57,10 @@ object AppConfig {
     ZConfig.fromSystemEnv(configDesc)
 
   // for layer config granularity
-  val allLayers: ZLayer[system.System, ReadError[String], HasAllConfigs] = {
+  val allLayers: ZLayer[system.System, ReadError[String], HasAllConfigs] =
     layer.to(
       ZLayer.fromServiceMany[AppConfig, HasAllConfigs] { case AppConfig(db, http, auth0) =>
         Has(db) ++ Has(http) ++ Has(auth0)
       }
     )
-  }
 }

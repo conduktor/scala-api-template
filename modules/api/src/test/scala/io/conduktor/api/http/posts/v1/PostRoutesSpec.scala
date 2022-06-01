@@ -64,10 +64,14 @@ object PostRoutesSpec extends DefaultRunnableSpec {
 
   val httpClient: TaskLayer[Has[HttpClient]] = HttpClientZioBackend().toLayer
 
-  val commonLayers
-    : ZLayer[Has[Clock.Service] with Has[zio.console.Console.Service] with Has[zio.system.System.Service] with Has[Random.Service] with Has[
+  val commonLayers: ZLayer[Has[Clock.Service]
+    with Has[zio.console.Console.Service]
+    with Has[zio.system.System.Service]
+    with Has[Random.Service]
+    with Has[
       Blocking.Service
-    ] with Has[PostService], Throwable, Has[HttpClient] with Has[Server]] =
+    ]
+    with Has[PostService], Throwable, Has[HttpClient] with Has[Server]] =
     ZLayer.fromSomeMagic[zio.ZEnv with Has[PostService], Env](
       httpClient,
       dummyAuth,
