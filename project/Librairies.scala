@@ -2,20 +2,20 @@ import sbt._
 
 object Librairies {
 
-  val zioVersion       = "1.0.12"
+  val zioVersion       = "1.0.14"
   val zioConfigVersion = "1.0.10"
   val tapirVersion     = "0.18.3"
   val http4sVersion    = "0.22.0"
-  val circeVersion     = "0.14.1"
-  val refinedVersion   = "0.9.27"
+  val circeVersion     = "0.14.2"
+  val refinedVersion   = "0.9.29"
   val sttpVersion      = "3.3.16"
   val slf4jVersion     = "1.7.36"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "8.0.3",
-    "org.postgresql" % "postgresql"  % "42.3.1"
+    "org.flywaydb"   % "flyway-core" % "8.5.12",
+    "org.postgresql" % "postgresql"  % "42.3.6"
   )
 
   val refined: Seq[ModuleID] = Seq(
@@ -27,7 +27,7 @@ object Librairies {
     "dev.zio"              %% "zio"          % zioVersion,
     "dev.zio"              %% "zio-test"     % zioVersion % Test,
     "dev.zio"              %% "zio-test-sbt" % zioVersion % Test,
-    "io.github.kitlangton" %% "zio-magic"    % "0.3.9"
+    "io.github.kitlangton" %% "zio-magic"    % "0.3.12"
   )
 
   val db = Seq(
@@ -54,7 +54,7 @@ object Librairies {
 
   val jwt = Seq(
     "com.github.jwt-scala" %% "jwt-circe" % "9.0.2",
-    "com.auth0"             % "jwks-rsa"  % "0.20.0"
+    "com.auth0"             % "jwks-rsa"  % "0.21.1"
   )
 
   val json = Seq(
@@ -66,8 +66,8 @@ object Librairies {
   )
 
   val logging = Seq(
-    "dev.zio"       %% "zio-logging-slf4j" % "0.5.13",
-    "ch.qos.logback" % "logback-classic"   % "1.2.6",
+    "dev.zio"       %% "zio-logging-slf4j" % "0.5.14",
+    "ch.qos.logback" % "logback-classic"   % "1.2.11",
     "org.slf4j"      % "jul-to-slf4j"      % slf4jVersion,
     "org.slf4j"      % "log4j-over-slf4j"  % slf4jVersion,
     "org.slf4j"      % "jcl-over-slf4j"    % slf4jVersion,
@@ -86,7 +86,7 @@ object Librairies {
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion
   )
 
-  val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.4" % Test
+  val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "1.0.1" % Test
   val dbTestingStack   = Seq(embeddedPostgres)
 
 }
