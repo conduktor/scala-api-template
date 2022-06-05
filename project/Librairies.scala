@@ -2,7 +2,7 @@ import sbt._
 
 object Librairies {
 
-  val zioVersion       = "1.0.14"
+  val zioVersion       = "1.0.15"
   val zioConfigVersion = "1.0.10"
   val tapirVersion     = "0.18.3"
   val http4sVersion    = "0.22.0"
