@@ -2,19 +2,19 @@ import sbt._
 
 object Librairies {
 
-  val zioVersion       = "1.0.14"
-  val zioConfigVersion = "2.0.4"
+  val zioVersion       = "1.0.15"
+  val zioConfigVersion = "1.0.10"
   val tapirVersion     = "0.18.3"
   val http4sVersion    = "0.22.0"
   val circeVersion     = "0.14.2"
-  val refinedVersion   = "0.9.27"
+  val refinedVersion   = "0.9.29"
   val sttpVersion      = "3.3.16"
   val slf4jVersion     = "1.7.36"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "8.0.5",
+    "org.flywaydb"   % "flyway-core" % "8.5.12",
     "org.postgresql" % "postgresql"  % "42.3.6"
   )
 
@@ -53,8 +53,8 @@ object Librairies {
   )
 
   val jwt = Seq(
-    "com.github.jwt-scala" %% "jwt-circe" % "9.0.2",
-    "com.auth0"             % "jwks-rsa"  % "0.20.2"
+    "com.github.jwt-scala" %% "jwt-circe" % "9.0.5",
+    "com.auth0"             % "jwks-rsa"  % "0.21.1"
   )
 
   val json = Seq(
@@ -86,7 +86,7 @@ object Librairies {
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion
   )
 
-  val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "0.13.4" % Test
+  val embeddedPostgres = "com.opentable.components" % "otj-pg-embedded" % "1.0.1" % Test
   val dbTestingStack   = Seq(embeddedPostgres)
 
 }
