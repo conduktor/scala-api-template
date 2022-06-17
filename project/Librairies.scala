@@ -14,7 +14,7 @@ object Librairies {
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "8.5.12",
+    "org.flywaydb"   % "flyway-core" % "8.5.13",
     "org.postgresql" % "postgresql"  % "42.4.0"
   )
 
