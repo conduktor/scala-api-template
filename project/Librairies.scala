@@ -8,7 +8,7 @@ object Librairies {
   val http4sVersion    = "0.22.0"
   val circeVersion     = "0.14.2"
   val refinedVersion   = "0.9.29"
-  val sttpVersion      = "3.3.16"
+  val sttpVersion      = "3.6.2"
   val slf4jVersion     = "1.7.36"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
@@ -48,8 +48,8 @@ object Librairies {
   )
 
   val client = Seq(
-    "com.softwaremill.sttp.client3" %% "core"                   % sttpVersion % Test,
-    "com.softwaremill.sttp.client3" %% "httpclient-backend-zio" % sttpVersion % Test
+    "com.softwaremill.sttp.client3" %% "core" % sttpVersion % Test,
+    "com.softwaremill.sttp.client3" %% "zio1" % sttpVersion % Test
   )
 
   val jwt = Seq(
