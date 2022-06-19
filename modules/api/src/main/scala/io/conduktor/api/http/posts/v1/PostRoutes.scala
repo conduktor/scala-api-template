@@ -9,6 +9,7 @@ import io.conduktor.api.model.{Post, User}
 import io.conduktor.api.repository.PostRepository.Error
 import io.conduktor.api.service.PostService
 import io.conduktor.api.service.PostService.{InvalidEmail, PostServiceError}
+import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.EndpointInput
 import sttp.tapir.json.circe._
 import sttp.tapir.ztapir._
@@ -71,27 +72,27 @@ object PostRoutes {
         .in(BASE_PATH)
         .in(jsonBody[CreatePostInput])
         .out(jsonBody[PostDTO])
-        .serverLogic { case (user, post) => createPostServerLogic(user, post) }
+        .serverLogic(user => post => createPostServerLogic(user, post))
 
     private val deletePostEndpoint =
       secureEndpoint.delete
         .in(BASE_PATH / path[UUID]("id"))
         .out(emptyOutput)
-        .serverLogic { case (_, id) => deletePostServerLogic(id) }
+        .serverLogic(_ => id => deletePostServerLogic(id))
 
     private val getPostByIdEndpoint =
       secureEndpoint.get
         .in(BASE_PATH / path[UUID]("id"))
         .out(jsonBody[PostDTO])
-        .serverLogic { case (_, id) => getPostByIdServerLogic(id) }
+        .serverLogic(_ => id => getPostByIdServerLogic(id))
 
     private val allPostsEndpoint =
       secureEndpoint.get
         .in(BASE_PATH)
         .out(jsonBody[List[PostDTO]])
-        .serverLogic(_ => allPostsServerLogic)
+        .serverLogic(_ => _ => allPostsServerLogic)
 
-    val all: List[ZServerEndpoint[Env, _, _, _]] = List(
+    val all: List[ZServerEndpoint[Env, ZioStreams]] = List(
       createPostEndpoint.widen[Env],
       deletePostEndpoint.widen[Env],
       getPostByIdEndpoint.widen[Env],
