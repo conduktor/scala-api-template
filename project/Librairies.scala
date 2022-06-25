@@ -32,7 +32,7 @@ object Librairies {
 
   val db = Seq(
     "org.tpolecat" %% "skunk-core"       % "0.3.1",
-    "dev.zio"      %% "zio-interop-cats" % "3.2.9.1"
+    "dev.zio"      %% "zio-interop-cats" % "3.3.0"
   )
 
   val http = Seq(
