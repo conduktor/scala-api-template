@@ -8,8 +8,8 @@ object BuildHelper {
   val commonSettings = Seq(
     libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-    javacOptions ++= Seq("-source", "11", "-target", "11"),
-    scalacOptions ++= Seq("-Ymacro-annotations", "-Xsource:3", "-target:11"),
+    javacOptions ++= Seq("-source", "17", "-target", "17"),
+    scalacOptions ++= Seq("-Ymacro-annotations", "-Xsource:3", "-target:17"),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     (Test / parallelExecution) := true,
     (Test / fork)              := true
@@ -22,7 +22,7 @@ object BuildHelper {
     Docker / packageName      := sys.env.getOrElse("DOCKER_PACKAGE", ""),
     dockerUpdateLatest        := true,
     dockerExposedPorts        := Seq(8080),
-    dockerBaseImage           := "adoptopenjdk/openjdk11:alpine-jre"
+    dockerBaseImage           := "adoptopenjdk/openjdk17:alpine-jre"
   ) ++ sys.env.get("RELEASE_TAG").map(v => Seq(Docker / version := v)).getOrElse(Seq.empty)
 
   lazy val noDoc = Seq(
