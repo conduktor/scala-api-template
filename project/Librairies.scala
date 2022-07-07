@@ -7,7 +7,7 @@ object Librairies {
   val tapirVersion     = "1.0.1"
   val http4sVersion    = "0.23.12"
   val circeVersion     = "0.14.2"
-  val refinedVersion   = "0.10.0"
+  val refinedVersion   = "0.10.1"
   val sttpVersion      = "3.6.2"
   val slf4jVersion     = "1.7.36"
 
