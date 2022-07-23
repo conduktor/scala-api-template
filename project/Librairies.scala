@@ -52,7 +52,7 @@ object Librairies {
   )
 
   val jwt = Seq(
-    "com.github.jwt-scala" %% "jwt-circe" % "9.0.5",
+    "com.github.jwt-scala" %% "jwt-circe" % "9.0.6",
     "com.auth0"             % "jwks-rsa"  % "0.21.1"
   )
 
