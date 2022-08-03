@@ -4,7 +4,7 @@ import io.conduktor.api.auth.AuthService
 import io.conduktor.api.auth.AuthService.AuthToken
 import io.conduktor.api.model.User
 import sttp.model.StatusCode
-import sttp.tapir.Endpoint
+import sttp.tapir.PublicEndpoint
 import sttp.tapir.codec.newtype._
 import sttp.tapir.codec.refined._
 import sttp.tapir.generic.auto._
@@ -18,15 +18,15 @@ object endpoints {
   /**
    * Public endpoint
    */
-  val baseEndpoint: Endpoint[Unit, ErrorInfo, Unit, Any] = endpoint.errorOut(
+  val baseEndpoint: PublicEndpoint[Unit, ErrorInfo, Unit, Any] = endpoint.errorOut(
     oneOf[ErrorInfo](
-      oneOfMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
-      oneOfMapping(StatusCode.BadRequest, jsonBody[BadRequest].description("bad request")),
-      oneOfMapping(StatusCode.Unauthorized, emptyOutputAs(Unauthorized)),
-      oneOfMapping(StatusCode.NoContent, emptyOutputAs(NoContent)),
-      oneOfMapping(StatusCode.Forbidden, emptyOutputAs(Forbidden)),
-      oneOfMapping(StatusCode.Conflict, jsonBody[Conflict].description("conflict")),
-      oneOfMapping(StatusCode.InternalServerError, jsonBody[ServerError].description("server error"))
+      oneOfVariant(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
+      oneOfVariant(StatusCode.BadRequest, jsonBody[BadRequest].description("bad request")),
+      oneOfVariant(StatusCode.Unauthorized, emptyOutputAs(Unauthorized)),
+      oneOfVariant(StatusCode.NoContent, emptyOutputAs(NoContent)),
+      oneOfVariant(StatusCode.Forbidden, emptyOutputAs(Forbidden)),
+      oneOfVariant(StatusCode.Conflict, jsonBody[Conflict].description("conflict")),
+      oneOfVariant(StatusCode.InternalServerError, jsonBody[ServerError].description("server error"))
       // default is somehow broken since tapir 0.18, this leads to a ClassCastException on error
       // oneOfDefaultMapping(jsonBody[ServerError].description("unknown"))
     )
@@ -39,8 +39,8 @@ object endpoints {
    */
   def restrictedEndpoint(
     userFilter: User => Boolean
-  ): ZPartialServerEndpoint[Has[AuthService], User, Unit, ErrorInfo, Unit] =
-    baseEndpoint.in(auth.bearer[Option[AuthToken]]()).zServerLogicForCurrent { tokenOpt =>
+  ): ZPartialServerEndpoint[Has[AuthService], Option[AuthToken], User, Unit, ErrorInfo, Unit, Any] =
+    baseEndpoint.securityIn(auth.bearer[Option[AuthToken]]()).zServerSecurityLogic { tokenOpt =>
       tokenOpt
         .map(token =>
           AuthService
@@ -54,6 +54,7 @@ object endpoints {
   /**
    * Any user with a valid JWT can access this endpoint
    */
-  val secureEndpoint: ZPartialServerEndpoint[Has[AuthService], User, Unit, ErrorInfo, Unit] = restrictedEndpoint(_ => true)
+  val secureEndpoint: ZPartialServerEndpoint[Has[AuthService], Option[AuthToken], User, Unit, ErrorInfo, Unit, Any] =
+    restrictedEndpoint(_ => true)
 
 }
