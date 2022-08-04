@@ -3,7 +3,7 @@ import sbt._
 object Librairies {
 
   val zioVersion       = "1.0.16"
-  val zioConfigVersion = "2.0.4"
+  val zioConfigVersion = "2.0.5"
   val tapirVersion     = "1.0.3"
   val http4sVersion    = "0.23.12"
   val circeVersion     = "0.14.2"
@@ -14,7 +14,7 @@ object Librairies {
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "9.0.4",
+    "org.flywaydb"   % "flyway-core" % "9.1.2",
     "org.postgresql" % "postgresql"  % "42.4.1"
   )
 
