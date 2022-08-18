@@ -15,7 +15,7 @@ object Librairies {
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
     "org.flywaydb"   % "flyway-core" % "9.1.5",
-    "org.postgresql" % "postgresql"  % "42.4.1"
+    "org.postgresql" % "postgresql"  % "42.4.2"
   )
 
   val refined: Seq[ModuleID] = Seq(
