@@ -6,7 +6,7 @@ import sbtbuildinfo.BuildInfoPlugin.autoImport.BuildInfoKey
 ThisBuild / organization               := "io.conduktor"
 ThisBuild / homepage                   := Some(url("https://www.conduktor.io/"))
 ThisBuild / licenses                   := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
-ThisBuild / scalaVersion               := "2.13.8"
+ThisBuild / scalaVersion               := "2.13.9"
 ThisBuild / scalafmtCheck              := true
 ThisBuild / scalafmtSbtCheck           := true
 ThisBuild / semanticdbEnabled          := true
