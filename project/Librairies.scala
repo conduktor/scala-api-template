@@ -31,7 +31,7 @@ object Librairies {
   )
 
   val db = Seq(
-    "org.tpolecat" %% "skunk-core"       % "0.3.1",
+    "org.tpolecat" %% "skunk-core"       % "0.3.2",
     "dev.zio"      %% "zio-interop-cats" % "3.2.9.1"
   )
 
