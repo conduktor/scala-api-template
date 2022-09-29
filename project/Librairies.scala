@@ -9,7 +9,7 @@ object Librairies {
   val circeVersion     = "0.14.3"
   val refinedVersion   = "0.10.1"
   val sttpVersion      = "3.8.0"
-  val slf4jVersion     = "2.0.2"
+  val slf4jVersion     = "2.0.3"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
