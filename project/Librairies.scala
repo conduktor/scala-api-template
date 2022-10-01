@@ -8,13 +8,13 @@ object Librairies {
   val http4sVersion    = "0.23.12"
   val circeVersion     = "0.14.3"
   val refinedVersion   = "0.10.1"
-  val sttpVersion      = "3.8.0"
+  val sttpVersion      = "3.8.2"
   val slf4jVersion     = "2.0.3"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "9.3.1",
+    "org.flywaydb"   % "flyway-core" % "9.4.0",
     "org.postgresql" % "postgresql"  % "42.5.0"
   )
 
