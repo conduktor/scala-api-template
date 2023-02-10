@@ -1,4 +1,4 @@
-addSbtPlugin("com.github.sbt"            % "sbt-native-packager" % "1.9.13")
+addSbtPlugin("com.github.sbt"            % "sbt-native-packager" % "1.9.14")
 addSbtPlugin("ch.epfl.scala"             % "sbt-scalafix"        % "0.10.4")
 addSbtPlugin("org.scalameta"             % "sbt-scalafmt"        % "2.5.0")
 addSbtPlugin("pl.project13.scala"        % "sbt-jmh"             % "0.4.4")
