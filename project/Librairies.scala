@@ -2,20 +2,20 @@ import sbt._
 
 object Librairies {
 
-  val zioVersion       = "1.0.17"
+  val zioVersion       = "2.0.6"
   val zioConfigVersion = "2.0.9"
   val tapirVersion     = "1.0.4"
   val http4sVersion    = "0.23.12"
-  val circeVersion     = "0.14.3"
+  val circeVersion     = "0.14.4"
   val refinedVersion   = "0.10.1"
-  val sttpVersion      = "3.8.5"
+  val sttpVersion      = "3.8.9"
   val slf4jVersion     = "2.0.6"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
   val refinedScalacheck = "eu.timepit"  %% "refined-scalacheck" % refinedVersion
   val flyway            = Seq(
-    "org.flywaydb"   % "flyway-core" % "9.10.0",
-    "org.postgresql" % "postgresql"  % "42.5.1"
+    "org.flywaydb"   % "flyway-core" % "9.14.1",
+    "org.postgresql" % "postgresql"  % "42.5.3"
   )
 
   val refined: Seq[ModuleID] = Seq(
@@ -53,7 +53,7 @@ object Librairies {
 
   val jwt = Seq(
     "com.github.jwt-scala" %% "jwt-circe" % "9.1.2",
-    "com.auth0"             % "jwks-rsa"  % "0.21.2"
+    "com.auth0"             % "jwks-rsa"  % "0.21.3"
   )
 
   val json = Seq(
@@ -65,7 +65,7 @@ object Librairies {
   )
 
   val logging = Seq(
-    "dev.zio"       %% "zio-logging-slf4j" % "2.1.2",
+    "dev.zio"       %% "zio-logging-slf4j" % "2.1.8",
     "ch.qos.logback" % "logback-classic"   % "1.4.5",
     "org.slf4j"      % "jul-to-slf4j"      % slf4jVersion,
     "org.slf4j"      % "log4j-over-slf4j"  % slf4jVersion,
