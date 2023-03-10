@@ -8,7 +8,7 @@ object Librairies {
   val http4sVersion    = "0.23.13"
   val circeVersion     = "0.14.4"
   val refinedVersion   = "0.10.1"
-  val sttpVersion      = "3.8.9"
+  val sttpVersion      = "3.8.13"
   val slf4jVersion     = "2.0.6"
 
   val newtype           = "io.estatico" %% "newtype"            % "0.4.4"
