@@ -1,7 +1,7 @@
 package io.conduktor.api.http.health
 
-import io.conduktor.api.http.ErrorInfo
 import io.conduktor.api.http.endpoints.baseEndpoint
+import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.ztapir._
 
 import zio.ZIO
@@ -9,17 +9,17 @@ import zio.ZIO
 object HealthRoutes {
 
   object Endpoints {
-    def healthEndpoint: ZServerEndpoint[Any, Unit, ErrorInfo, Unit] = baseEndpoint.get
+    def healthEndpoint: ZServerEndpoint[Any, ZioStreams] = baseEndpoint.get
       .in("health")
       .out(emptyOutput)
       .zServerLogic(_ => ZIO.unit)
 
-    def helloWorldEndpoint: ZServerEndpoint[Any, Unit, ErrorInfo, String] = baseEndpoint.get
+    def helloWorldEndpoint: ZServerEndpoint[Any, ZioStreams] = baseEndpoint.get
       .in("hello-world")
       .out(stringBody)
       .zServerLogic(_ => ZIO.effectTotal("hello world !"))
 
-    val all: List[ZServerEndpoint[Any, _, _, _]] = List(
+    val all: List[ZServerEndpoint[Any, ZioStreams]] = List(
       healthEndpoint,
       helloWorldEndpoint
     )
