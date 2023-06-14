@@ -66,7 +66,7 @@ object Librairies {
 
   val logging = Seq(
     "dev.zio"       %% "zio-logging-slf4j" % "2.1.12",
-    "ch.qos.logback" % "logback-classic"   % "1.4.7",
+    "ch.qos.logback" % "logback-classic"   % "1.4.8",
     "org.slf4j"      % "jul-to-slf4j"      % slf4jVersion,
     "org.slf4j"      % "log4j-over-slf4j"  % slf4jVersion,
     "org.slf4j"      % "jcl-over-slf4j"    % slf4jVersion,
